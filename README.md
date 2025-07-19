@@ -13,14 +13,14 @@ While this project is currently under active development, feel free to give it a
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2025-07-19 18:46:47 UTC
+Last updated at 2025-07-19 18:54:12 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
 YAML                             2              8             13             37
-Markdown                         1              4              2             22
+Markdown                         1              6              2             25
 -------------------------------------------------------------------------------
-SUM:                             3             12             15             59
+SUM:                             3             14             15             62
 -------------------------------------------------------------------------------
 3 Files were skipped (duplicate, binary, or without source code):
   gitattributes: 1
