@@ -7,7 +7,7 @@
 # Create temporary files for our JSON
 layout_file=$(mktemp)
 data_file=$(mktemp)
-tables_script="$(dirname "$0")/../tables"
+tables_script="$(dirname "$0")/../tables.c/tables"
 
 # Cleanup function
 cleanup() {

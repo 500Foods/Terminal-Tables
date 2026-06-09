@@ -18,11 +18,11 @@ get_display_length() {
     local text="$1"
     local clean_text
     clean_text=$(echo -n "$text" | sed -E 's/\x1B\[[0-9;]*[a-zA-Z]//g')
-    if [[ "$clean_text" =~ ^[[:ascii:]]*$ ]]; then
-        echo "${#clean_text}"
-        return
-    fi
-    if [[ ! "$clean_text" =~ [^\x00-\x7F] ]]; then
+    # Check if pure ASCII (all bytes <= 127)
+    # If the string after removing bytes >= 128 equals original, it's pure ASCII
+    local ascii_only
+    ascii_only=$(echo -n "$clean_text" | tr -d '\200-\377' 2>/dev/null)
+    if [[ "$clean_text" == "$ascii_only" ]]; then
         echo "${#clean_text}"
         return
     fi
@@ -100,11 +100,10 @@ format_numeric() { local value="$1" format="$2" use_commas="$3"; [[ -z "$value" 
 format_number() { format_numeric "$1" "$2" "true"; }
 format_num() { format_numeric "$1" "$2" "true"; }
 format_float() {
-    local value="$1" format="$2" column_index="$3"
+    local value="$1" format="$2" string_limit="$3" wrap_mode="$4" wrap_char="$5" column_index="$6"
     [[ -z "$value" || "$value" == "null" || "$value" == "0" ]] && { echo ""; return; }
     
     if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        # Use the maximum decimal places for this column if available
         local max_decimals="${MAX_DECIMAL_PLACES[$column_index]:-2}"
         
         # Format with consistent decimal places
