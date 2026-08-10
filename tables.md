@@ -28,9 +28,10 @@ Tables.sh converts JSON data into beautifully formatted ANSI tables with the fol
 
 ### Options
 
-- `--debug`: Enable debug output to stderr
+- `--mono`: Disable all ANSI colors (theme colors and `{COLOR}` placeholders)
 - `--version`: Display version information
 - `--help`, `-h`: Show help message
+- C only: `--debug`, `--debug_layout`
 
 ### Examples
 
@@ -38,8 +39,8 @@ Tables.sh converts JSON data into beautifully formatted ANSI tables with the fol
 # Basic table rendering
 ./tables.sh layout.json data.json
 
-# With debug output
-./tables.sh layout.json data.json --debug
+# Monochrome output (no ANSI colors)
+./tables.sh layout.json data.json --mono
 
 # Show version
 ./tables.sh --version
@@ -114,8 +115,8 @@ The Tables Themes Library provides a comprehensive theme system for the `tables.
 
 ##### Available Themes
 
-- **Red Theme**: Uses red borders (`\033[0;31m`), with Green captions (`\033[0;32m`), Bright White headers and summaries (`\033[1;37m`), Cyan footers (`\033[0;36m`), and default text color.
-- **Blue Theme**: Uses blue borders (`\033[0;34m`), with Blue captions (`\033[0;34m`), Bright White headers and summaries (`\033[1;37m`), Cyan footers (`\033[0;36m`), and default text color.
+- **Red Theme**: Uses red borders (`\033[0;31m`), with Cyan captions and footers (`\033[0;36m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
+- **Blue Theme**: Uses blue borders (`\033[0;34m`), with Cyan captions and footers (`\033[0;36m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
 
 ##### Theme Structure
 

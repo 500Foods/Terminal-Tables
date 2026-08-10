@@ -4,7 +4,9 @@ This directory contains the comparison test suite for the Terminal Tables implem
 
 ## Overview
 
-The test suite compares the output of the C implementation (`tables.c/tables`) against the Bash implementation (`tables.sh/tables.sh`) to ensure identical rendering. Both implementations are run with the same JSON data and layout files, and their outputs are compared after stripping ANSI colors and normalizing dynamic content.
+The test suite compares the output of the C implementation (`tables.c/tables`) against the Bash implementation (`tables.sh/tables.sh`) to ensure identical rendering. Both implementations are run with the same JSON data and layout files, and their outputs are compared including ANSI color sequences (after normalizing dynamic content only).
+
+**Bash is the reference implementation.** The Bash implementation was the original variant created; all other implementations (C, and any future ports) are compared *against* Bash output as the oracle.
 
 ## Directory Structure
 
@@ -81,7 +83,7 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
 
 ## Adding New Language Implementations
 
-To add a new language implementation to the comparison:
+**Bash is the reference oracle.** When adding a new language implementation, it must match the Bash output (after normalization) for every scenario. To add a new language:
 1. Add the implementation binary/script path to `run_tests.sh`
 2. Add a symlink setup block in the `run_scenario()` function
 3. Add a new `run` block alongside the C and Bash calls
@@ -89,11 +91,14 @@ To add a new language implementation to the comparison:
 
 ## Normalization
 
-The comparison normalizes:
-- ANSI color codes (stripped)
-- Timestamps (dates → `DATE`, times → `TIME`)
-- Test labels (`TestC X-Y` → `Test X-Y` in Bash output)
-- Separator line lengths
+The comparison normalizes only:
+- Timestamps (dates → `DATE`, times → `TIME`) — needed because some scenarios use `$(date)` in titles/footers
+
+ANSI color codes and separator geometry are **not** stripped. Both implementations must emit identical theme colors, `{COLOR}` placeholder expansions, color scoping, and border/separator line lengths.
+
+## CLI options tested implicitly
+
+Both implementations support `--mono` (disable all ANSI colors). Comparison runs use the default colored path so ANSI parity is enforced.
 
 ## Performance Notes
 

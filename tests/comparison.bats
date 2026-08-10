@@ -71,7 +71,8 @@ CMEOF
     local c_raw
     c_raw=$(timeout 30 bash "$c_dest" "$tmp_layout" "$tmp_data" 2>&1) || true
     local c_out
-    c_out=$(echo "$c_raw" | sed 's/\x1b\[[0-9;]*m//g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/DATE/g' | sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/TIME/g')
+    # Keep ANSI — both implementations must emit identical color sequences
+    c_out=$(echo "$c_raw" | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/DATE/g' | sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/TIME/g')
 
     # Run Bash version
     local sh_dest="$SHROOT/tables.sh/tst/test.sh"
@@ -84,7 +85,7 @@ SHCEOF
     local sh_raw
     sh_raw=$(timeout 120 bash "$sh_dest" "$tmp_layout" "$tmp_data" 2>&1) || true
     local sh_out
-    sh_out=$(echo "$sh_raw" | sed 's/\x1b\[[0-9;]*m//g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/DATE/g' | sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/TIME/g' | sed -E 's/TestC ([0-9]-[A-Z]+)/Test \1/g' | sed -E 's/^-+$//' | sed -E 's/^─+$//')
+    sh_out=$(echo "$sh_raw" | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/DATE/g' | sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/TIME/g')
 
     rm -f "$tmp_data" "$tmp_layout"
 

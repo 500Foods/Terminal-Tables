@@ -96,11 +96,9 @@ trap cleanup EXIT
 
 normalize_output() {
     local output="$1"
-    output=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g')
+    # Keep ANSI and separator geometry — only dynamic timestamps are normalized
     output=$(echo "$output" | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/DATE/g')
     output=$(echo "$output" | sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/TIME/g')
-    output=$(echo "$output" | sed -E 's/TestC ([0-9]-[A-Z]+)/Test \1/g')
-    output=$(echo "$output" | sed -E 's/^-+$//' | sed -E 's/^─+$//')
     echo "$output"
 }
 
@@ -323,14 +321,19 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 1
 fi
 
+# Per-suite fail counts for the performance P/F column
+declare -A SUITE_FAIL_COUNT=()
+
 # Suite 00: Linting (special-cased; not in manifest)
 for s in "${SUITES[@]}"; do
     if [[ "$s" == "00" ]]; then
         echo "--- Suite 00: Linting ---"
         if run_lint_suite; then
             pass_count=$((pass_count + 1))
+            SUITE_FAIL_COUNT["00"]=0
         else
             fail_count=$((fail_count + 1))
+            SUITE_FAIL_COUNT["00"]=1
         fi
         total_count=$((total_count + 1))
         echo ""
@@ -369,13 +372,19 @@ for ((i=0; i<suite_count; i++)); do
         if ! grep -q "^${suite}"$'\t' "$SUITE_NAMES_FILE" 2>/dev/null; then
             echo -e "${suite}\t${current_suite_name}" >> "$SUITE_NAMES_FILE"
         fi
+        SUITE_FAIL_COUNT["$suite"]=${SUITE_FAIL_COUNT["$suite"]:-0}
     fi
 
     scenario_output=$(run_scenario "$suite" "$scenario_name")
     rc=$?
     echo "  $label: $scenario_output"
 
-    [[ $rc -eq 0 ]] && pass_count=$((pass_count + 1)) || fail_count=$((fail_count + 1))
+    if [[ $rc -eq 0 ]]; then
+        pass_count=$((pass_count + 1))
+    else
+        fail_count=$((fail_count + 1))
+        SUITE_FAIL_COUNT["$suite"]=$((${SUITE_FAIL_COUNT["$suite"]:-0} + 1))
+    fi
     total_count=$((total_count + 1))
 done
 
@@ -404,6 +413,10 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
         total_sh=$((total_sh + SUITE_SH_MS[$s]))
     done
 
+    # P/F glyphs: single-width dingbats (no emoji background)
+    PF_PASS="{GREEN}✓{NC}"
+    PF_FAIL="{RED}✗{NC}"
+
     # Build ordered suite list from names file (run order)
     data_rows="["
     first=true
@@ -422,16 +435,23 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
         sh_fmt="${local_colored[0]}"
         c_fmt="${local_colored[1]}"
 
+        if [[ ${SUITE_FAIL_COUNT[$s]:-0} -eq 0 ]]; then
+            pf="$PF_PASS"
+        else
+            pf="$PF_FAIL"
+        fi
+
         if [[ "$first" != "true" ]]; then
             data_rows+=","
         fi
         first=false
         data_rows+=$(jq -nc \
             --arg suite "$s $name" \
+            --arg pf "$pf" \
             --arg bash_time "$sh_fmt" \
             --arg c_time "$c_fmt" \
             --arg ratio "$ratio" \
-            '{group:"suite",suite:$suite,bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
+            '{group:"suite",suite:$suite,pf:$pf,bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
     done < "$SUITE_NAMES_FILE"
 
     if [[ $total_c -gt 0 ]]; then
@@ -442,12 +462,18 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
     mapfile -t total_colored < <(colorize_timings "$total_sh" "$total_c")
     total_sh_fmt="${total_colored[0]}"
     total_c_fmt="${total_colored[1]}"
+    if [[ $fail_count -eq 0 ]]; then
+        total_pf="$PF_PASS"
+    else
+        total_pf="$PF_FAIL"
+    fi
     data_rows+=","
     data_rows+=$(jq -nc \
+        --arg pf "$total_pf" \
         --arg bash_time "$total_sh_fmt" \
         --arg c_time "$total_c_fmt" \
         --arg ratio "$total_ratio" \
-        '{group:"total",suite:"Total",bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
+        '{group:"total",suite:"Total",pf:$pf,bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
 
     # Informational annotated row (excluded from any future summary math)
     read -r bash_loc c_loc < <(count_loc)
@@ -475,7 +501,7 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
             --arg bash_time "$bash_loc_fmt" \
             --arg c_time "$c_loc_fmt" \
             --arg ratio "$loc_ratio" \
-            '{group:"loc",suite:"Lines of Code",bash_time:$bash_time,c_time:$c_time,ratio:$ratio,annotate:true}')
+            '{group:"loc",suite:"Lines of Code",pf:"",bash_time:$bash_time,c_time:$c_time,ratio:$ratio,annotate:true}')
     fi
 
     data_rows+="]"
@@ -490,6 +516,7 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
   "title_position": "center",
   "columns": [
     {"header": "Suite", "key": "suite", "datatype": "text", "justification": "left"},
+    {"header": "P/F", "key": "pf", "datatype": "text", "justification": "center"},
     {"header": "Bash", "key": "bash_time", "datatype": "text", "justification": "right"},
     {"header": "C", "key": "c_time", "datatype": "text", "justification": "right"},
     {"header": "Bash / C", "key": "ratio", "datatype": "text", "justification": "right"},

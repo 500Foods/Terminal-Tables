@@ -456,7 +456,7 @@ char *evaluate_dynamic_string(const char *input) {
                     output_len += len;
                 }
                 // Remove trailing newline if present
-                if (output_len > 0 && cmd_output[output_len - 1] == '\n') {
+                if (output_len > 0 && cmd_output != NULL && cmd_output[output_len - 1] == '\n') {
                     cmd_output[output_len - 1] = '\0';
                 }
             }
@@ -508,20 +508,22 @@ char *replace_color_placeholders(const char *input) {
         return strdup("");
     }
 
-    // Define color mappings
+    extern int mono_mode;
+
+    // Define color mappings (empty replacements in --mono mode)
     const char *color_map[][2] = {
-        {"{RED}", "\033[0;31m"},
-        {"{BLUE}", "\033[0;34m"},
-        {"{GREEN}", "\033[0;32m"},
-        {"{YELLOW}", "\033[0;33m"},
-        {"{CYAN}", "\033[0;36m"},
-        {"{MAGENTA}", "\033[0;35m"},
-        {"{WHITE}", "\033[1;37m"},
-        {"{BOLD}", "\033[1m"},
-        {"{DIM}", "\033[2m"},
-        {"{UNDERLINE}", "\033[4m"},
-        {"{NC}", "\033[0m"},
-        {"{RESET}", "\033[0m"}
+        {"{RED}", mono_mode ? "" : "\033[0;31m"},
+        {"{BLUE}", mono_mode ? "" : "\033[0;34m"},
+        {"{GREEN}", mono_mode ? "" : "\033[0;32m"},
+        {"{YELLOW}", mono_mode ? "" : "\033[0;33m"},
+        {"{CYAN}", mono_mode ? "" : "\033[0;36m"},
+        {"{MAGENTA}", mono_mode ? "" : "\033[0;35m"},
+        {"{WHITE}", mono_mode ? "" : "\033[1;37m"},
+        {"{BOLD}", mono_mode ? "" : "\033[1m"},
+        {"{DIM}", mono_mode ? "" : "\033[2m"},
+        {"{UNDERLINE}", mono_mode ? "" : "\033[4m"},
+        {"{NC}", mono_mode ? "" : "\033[0m"},
+        {"{RESET}", mono_mode ? "" : "\033[0m"}
     };
     const int color_map_size = sizeof(color_map) / sizeof(color_map[0]);
 

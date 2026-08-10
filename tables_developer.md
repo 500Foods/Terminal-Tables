@@ -148,7 +148,7 @@ declare -A THEME_NAME=(
 **Red Theme:**
 
 - Border: Red (`\033[0;31m`)
-- Caption: Green (`\033[0;32m`)
+- Caption: Cyan (`\033[0;36m`)
 - Header: Bright White (`\033[1;37m`)
 - Footer: Cyan (`\033[0;36m`)
 - Summary: Bright White (`\033[1;37m`)

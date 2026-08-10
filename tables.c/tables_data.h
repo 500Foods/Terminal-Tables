@@ -1,6 +1,12 @@
 /*
  * tables_data.h - Header file for data processing in the tables utility
  * Defines structures and function prototypes for loading, sorting, and summarizing data.
+ *
+ * This header defines:
+ *   - DataRow: A single row of data values with an annotate flag
+ *   - SummaryStats: Per-column aggregate statistics (sum, min, max, avg, count, etc.)
+ *   - TableData: Complete table data (all rows and their summaries)
+ *   - Function prototypes for data lifecycle management
  */
 
 #ifndef TABLES_DATA_H
@@ -9,21 +15,27 @@
 #include "tables_config.h"
 #include "tables_datatypes.h"
 
-/* Structure to hold a single data row */
+/* Structure to hold a single data row
+ * Each row contains an array of string values, one per column,
+ * and an annotate flag to exclude the row from summary calculations
+ */
 typedef struct {
     char **values;          /* Array of string values for each column */
     int annotate;           /* If set, row is display-only (skipped in summaries) */
 } DataRow;
 
-/* Structure to hold summary statistics for a column */
+/* Structure to hold summary statistics for a column
+ * Accumulated during data processing to support sum, min, max, avg,
+ * count, unique count, and blank/non-blank counting
+ */
 typedef struct {
-    double sum;             /* Sum of values */
+    double sum;             /* Sum of all numeric values */
     int count;              /* Count of non-null values */
     double min;             /* Minimum value */
     int min_initialized;    /* Flag to indicate if min has been initialized */
     double max;             /* Maximum value */
     int max_initialized;    /* Flag to indicate if max has been initialized */
-    char **unique_values;   /* Array of unique values */
+    char **unique_values;   /* Array of unique values (for SUMMARY_UNIQUE) */
     int unique_count;       /* Number of unique values */
     double avg_sum;         /* Sum for calculating average */
     int avg_count;          /* Count for calculating average */
@@ -32,7 +44,9 @@ typedef struct {
     int nonblanks;          /* Count of non-blank or non-zero values */
 } SummaryStats;
 
-/* Structure to hold table data */
+/* Structure to hold table data
+ * Contains all data rows and their associated summary statistics
+ */
 typedef struct {
     DataRow *rows;          /* Array of data rows */
     int row_count;          /* Number of rows */
@@ -40,7 +54,8 @@ typedef struct {
     int max_lines;          /* Maximum number of lines per row after wrapping */
 } TableData;
 
-/* Function prototypes */
+/* Function prototypes
+ * Data loading and processing */
 int prepare_data(const char *data_file, TableConfig *config, TableData *data);
 void sort_data(TableConfig *config, TableData *data);
 void process_data_rows(TableConfig *config, TableData *data);

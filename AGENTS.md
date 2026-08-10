@@ -72,11 +72,19 @@ Total: 97 test cases (96 comparison + 1 lint)
 
 ### Normalization
 
-The comparison normalizes:
-- ANSI color codes (stripped)
-- Timestamps (`YYYY-MM-DD` → `DATE`, `HH:MM:SS` → `TIME`)
-- Test labels (`TestC X-Y` → `Test X-Y`)
-- Separator line lengths
+The comparison normalizes only:
+- Timestamps (`YYYY-MM-DD` → `DATE`, `HH:MM:SS` → `TIME`) — needed because some scenarios use `$(date)` in titles/footers
+
+ANSI color codes and separator geometry are **not** stripped. Both implementations must emit identical theme colors, placeholder expansions (`{RED}`, `{NC}`, …), color scoping (pad outside color; reset after content), and border/separator line lengths.
+
+**Bash is the reference implementation.** The Bash implementation (`tables.sh/tables.sh`) was the original variant created. All language implementations (C, future ports) are compared *against* the Bash output as the oracle. When adding a new language implementation, it should match the Bash output after normalization.
+
+### CLI options
+
+Both implementations accept:
+- `--mono` — disable all ANSI colors (theme colors and `{COLOR}` placeholders expand to empty)
+- `--help` / `-h`, `--version`
+- C only: `--debug`, `--debug_layout`
 
 ### Known Issues
 
