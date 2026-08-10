@@ -1,0 +1,35 @@
+{
+  "theme": "Red",
+  "title": "{GREEN}Complex Color Test{RESET} - {BOLD}Edge Cases{RESET}",
+  "title_position": "full",
+  "columns": [
+    {
+      "header": "Simple",
+      "key": "simple",
+      "justification": "left",
+      "datatype": "text",
+      "width": 15
+    },
+    {
+      "header": "Nested",
+      "key": "nested", 
+      "justification": "center",
+      "datatype": "text",
+      "width": 20
+    },
+    {
+      "header": "Multiple",
+      "key": "multiple",
+      "justification": "right", 
+      "datatype": "text",
+      "width": 18
+    },
+    {
+      "header": "Mixed Content",
+      "key": "mixed",
+      "justification": "left", 
+      "datatype": "text",
+      "width": 22
+    }
+  ]
+}

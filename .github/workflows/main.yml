@@ -12,12 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install C dependencies
-        run: sudo apt-get update && sudo apt-get install -y libjansson-dev jq bats
+        run: sudo apt-get update && sudo apt-get install -y libjansson-dev
       - name: Build C binary
-        run: |
-          mkdir -p tables.c/dist
-          gcc tables.c/tables.c/tables_main.c tables.c/tables.c/tables_config.c tables.c/tables.c/tables_data.c tables.c/tables.c/tables_datatypes.c tables.c/tables.c/tables_render.c tables.c/tables.c/tables_render_title.c tables.c/tables.c/tables_render_footer.c tables.c/tables.c/tables_render_rows.c tables.c/tables.c/tables_render_summaries.c tables.c/tables.c/tables_render_output.c tables.c/tables.c/tables_render_utils.c -ljansson -o tables.c/tables -lm
-      - name: Upload C binary
+        run: make -C tables.c uncompressed
+      - name: Upload C binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: tables-binary
@@ -29,16 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install runtime dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq bats
+        run: sudo apt-get update && sudo apt-get install -y jq bats shellcheck cppcheck
       - name: Download C binary
         uses: actions/download-artifact@v4
         with:
           name: tables-binary
           path: tables.c/
+      - name: Make C binary executable
+        run: chmod +x tables.c/tables
       - name: Run comparison tests
-        run: |
-          chmod +x tests/run_tests.sh
-          bash tests/run_tests.sh
+        run: bash tests/run_tests.sh
 
   cloc:
     runs-on: ubuntu-latest

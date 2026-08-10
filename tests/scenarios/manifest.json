@@ -1,0 +1,866 @@
+[
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-A",
+    "data_file": "test_1_A_data.json",
+    "layout_file": "test_1_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-B",
+    "data_file": "test_1_B_data.json",
+    "layout_file": "test_1_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-C",
+    "data_file": "test_1_C_data.json",
+    "layout_file": "test_1_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-D",
+    "data_file": "test_1_D_data.json",
+    "layout_file": "test_1_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-E",
+    "data_file": "test_1_E_data.json",
+    "layout_file": "test_1_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-F",
+    "data_file": "test_1_F_data.json",
+    "layout_file": "test_1_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-G",
+    "data_file": "test_1_G_data.json",
+    "layout_file": "test_1_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-H",
+    "data_file": "test_1_H_data.json",
+    "layout_file": "test_1_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "01",
+    "suite_name": "basic",
+    "label": "1-I",
+    "data_file": "test_1_I_data.json",
+    "layout_file": "test_1_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-A",
+    "data_file": "test_2_A_data.json",
+    "layout_file": "test_2_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-B",
+    "data_file": "test_2_B_data.json",
+    "layout_file": "test_2_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-C",
+    "data_file": "test_2_C_data.json",
+    "layout_file": "test_2_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-D",
+    "data_file": "test_2_D_data.json",
+    "layout_file": "test_2_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-E",
+    "data_file": "test_2_E_data.json",
+    "layout_file": "test_2_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-F",
+    "data_file": "test_2_F_data.json",
+    "layout_file": "test_2_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-G",
+    "data_file": "test_2_G_data.json",
+    "layout_file": "test_2_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-H",
+    "data_file": "test_2_H_data.json",
+    "layout_file": "test_2_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-I",
+    "data_file": "test_2_I_data.json",
+    "layout_file": "test_2_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "02",
+    "suite_name": "summary",
+    "label": "2-J",
+    "data_file": "test_2_J_data.json",
+    "layout_file": "test_2_J_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-A",
+    "data_file": "test_3_A_data.json",
+    "layout_file": "test_3_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-B",
+    "data_file": "test_3_B_data.json",
+    "layout_file": "test_3_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-C",
+    "data_file": "test_3_C_data.json",
+    "layout_file": "test_3_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-D",
+    "data_file": "test_3_D_data.json",
+    "layout_file": "test_3_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-E",
+    "data_file": "test_3_E_data.json",
+    "layout_file": "test_3_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-F",
+    "data_file": "test_3_F_data.json",
+    "layout_file": "test_3_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-G",
+    "data_file": "test_3_G_data.json",
+    "layout_file": "test_3_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-H",
+    "data_file": "test_3_H_data.json",
+    "layout_file": "test_3_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-I",
+    "data_file": "test_3_I_data.json",
+    "layout_file": "test_3_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-J",
+    "data_file": "test_3_J_data.json",
+    "layout_file": "test_3_J_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "03",
+    "suite_name": "wrapping",
+    "label": "3-K",
+    "data_file": "test_3_K_data.json",
+    "layout_file": "test_3_K_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "04",
+    "suite_name": "complex",
+    "label": "4-A",
+    "data_file": "test_4_A_data.json",
+    "layout_file": "test_4_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "04",
+    "suite_name": "complex",
+    "label": "4-B",
+    "data_file": "test_4_B_data.json",
+    "layout_file": "test_4_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "04",
+    "suite_name": "complex",
+    "label": "4-C",
+    "data_file": "test_4_C_data.json",
+    "layout_file": "test_4_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "04",
+    "suite_name": "complex",
+    "label": "4-D",
+    "data_file": "test_4_D_data.json",
+    "layout_file": "test_4_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "04",
+    "suite_name": "complex",
+    "label": "4-E",
+    "data_file": "test_4_E_data.json",
+    "layout_file": "test_4_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "05",
+    "suite_name": "titles",
+    "label": "5-A",
+    "data_file": "test_5_A_data.json",
+    "layout_file": "test_5_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "05",
+    "suite_name": "titles",
+    "label": "5-B",
+    "data_file": "test_5_B_data.json",
+    "layout_file": "test_5_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "05",
+    "suite_name": "titles",
+    "label": "5-C",
+    "data_file": "test_5_C_data.json",
+    "layout_file": "test_5_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "05",
+    "suite_name": "titles",
+    "label": "5-D",
+    "data_file": "test_5_D_data.json",
+    "layout_file": "test_5_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "05",
+    "suite_name": "titles",
+    "label": "5-E",
+    "data_file": "test_5_E_data.json",
+    "layout_file": "test_5_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-A",
+    "data_file": "test_6_A_data.json",
+    "layout_file": "test_6_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-B",
+    "data_file": "test_6_B_data.json",
+    "layout_file": "test_6_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-C",
+    "data_file": "test_6_C_data.json",
+    "layout_file": "test_6_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-D",
+    "data_file": "test_6_D_data.json",
+    "layout_file": "test_6_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-E",
+    "data_file": "test_6_E_data.json",
+    "layout_file": "test_6_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-F",
+    "data_file": "test_6_F_data.json",
+    "layout_file": "test_6_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-G",
+    "data_file": "test_6_G_data.json",
+    "layout_file": "test_6_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-H",
+    "data_file": "test_6_H_data.json",
+    "layout_file": "test_6_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-I",
+    "data_file": "test_6_I_data.json",
+    "layout_file": "test_6_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-J",
+    "data_file": "test_6_J_data.json",
+    "layout_file": "test_6_J_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-K",
+    "data_file": "test_6_K_data.json",
+    "layout_file": "test_6_K_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "06",
+    "suite_name": "title_positions",
+    "label": "6-L",
+    "data_file": "test_6_L_data.json",
+    "layout_file": "test_6_L_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "07",
+    "suite_name": "footers",
+    "label": "7-A",
+    "data_file": "test_7_A_data.json",
+    "layout_file": "test_7_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "07",
+    "suite_name": "footers",
+    "label": "7-B",
+    "data_file": "test_7_B_data.json",
+    "layout_file": "test_7_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "07",
+    "suite_name": "footers",
+    "label": "7-C",
+    "data_file": "test_7_C_data.json",
+    "layout_file": "test_7_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "07",
+    "suite_name": "footers",
+    "label": "7-D",
+    "data_file": "test_7_D_data.json",
+    "layout_file": "test_7_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "07",
+    "suite_name": "footers",
+    "label": "7-E",
+    "data_file": "test_7_E_data.json",
+    "layout_file": "test_7_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-A",
+    "data_file": "test_8_A_data.json",
+    "layout_file": "test_8_A_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-B",
+    "data_file": "test_8_B_data.json",
+    "layout_file": "test_8_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-C",
+    "data_file": "test_8_C_data.json",
+    "layout_file": "test_8_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-D",
+    "data_file": "test_8_D_data.json",
+    "layout_file": "test_8_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-E",
+    "data_file": "test_8_E_data.json",
+    "layout_file": "test_8_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-F",
+    "data_file": "test_8_F_data.json",
+    "layout_file": "test_8_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-G",
+    "data_file": "test_8_G_data.json",
+    "layout_file": "test_8_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-H",
+    "data_file": "test_8_H_data.json",
+    "layout_file": "test_8_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-I",
+    "data_file": "test_8_I_data.json",
+    "layout_file": "test_8_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-J",
+    "data_file": "test_8_J_data.json",
+    "layout_file": "test_8_J_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-K",
+    "data_file": "test_8_K_data.json",
+    "layout_file": "test_8_K_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-L",
+    "data_file": "test_8_L_data.json",
+    "layout_file": "test_8_L_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-M",
+    "data_file": "test_8_M_data.json",
+    "layout_file": "test_8_M_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-N",
+    "data_file": "test_8_N_data.json",
+    "layout_file": "test_8_N_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-O",
+    "data_file": "test_8_O_data.json",
+    "layout_file": "test_8_O_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-P",
+    "data_file": "test_8_P_data.json",
+    "layout_file": "test_8_P_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "08",
+    "suite_name": "footer_positions",
+    "label": "8-Q",
+    "data_file": "test_8_Q_data.json",
+    "layout_file": "test_8_Q_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-A",
+    "data_file": "test_9_A_data.json",
+    "layout_file": "test_9_A_layout.sh",
+    "data_dynamic": false,
+    "layout_dynamic": true
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-B",
+    "data_file": "test_9_B_data.json",
+    "layout_file": "test_9_B_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-C",
+    "data_file": "test_9_C_data.json",
+    "layout_file": "test_9_C_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-D",
+    "data_file": "test_9_D_data.json",
+    "layout_file": "test_9_D_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-E",
+    "data_file": "test_9_E_data.json",
+    "layout_file": "test_9_E_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-F",
+    "data_file": "test_9_F_data.json",
+    "layout_file": "test_9_F_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-G",
+    "data_file": "test_9_G_data.json",
+    "layout_file": "test_9_G_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-H",
+    "data_file": "test_9_H_data.json",
+    "layout_file": "test_9_H_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-I",
+    "data_file": "test_9_I_data.json",
+    "layout_file": "test_9_I_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-J",
+    "data_file": "test_9_J_data.json",
+    "layout_file": "test_9_J_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-K",
+    "data_file": "test_9_K_data.json",
+    "layout_file": "test_9_K_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-L",
+    "data_file": "test_9_L_data.json",
+    "layout_file": "test_9_L_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-M",
+    "data_file": "test_9_M_data.json",
+    "layout_file": "test_9_M_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-N",
+    "data_file": "test_9_N_data.json",
+    "layout_file": "test_9_N_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-O",
+    "data_file": "test_9_O_data.json",
+    "layout_file": "test_9_O_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-P",
+    "data_file": "test_9_P_data.json",
+    "layout_file": "test_9_P_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-Q",
+    "data_file": "test_9_Q_data.json",
+    "layout_file": "test_9_Q_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-R",
+    "data_file": "test_9_R_data.json",
+    "layout_file": "test_9_R_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-S",
+    "data_file": "test_9_S_data.json",
+    "layout_file": "test_9_S_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-T",
+    "data_file": "test_9_T_data.json",
+    "layout_file": "test_9_T_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-U",
+    "data_file": "test_9_U_data.json",
+    "layout_file": "test_9_U_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  },
+  {
+    "suite": "09",
+    "suite_name": "showcase",
+    "label": "9-V",
+    "data_file": "test_9_V_data.json",
+    "layout_file": "test_9_V_layout.json",
+    "data_dynamic": false,
+    "layout_dynamic": false
+  }
+]

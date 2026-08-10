@@ -1,0 +1,44 @@
+{
+  "theme": "Red",
+  "title": "Mixed Data Type Analysis",
+  "title_position": "left",
+  "footer": "Comprehensive Server Data for All Metrics and Categories - IT Operations $(date +%Y)",
+  "footer_position": "full",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Location",
+      "key": "location",
+      "datatype": "text",
+      "justification": "left",
+      "break": true,
+      "summary": "unique"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Bandwidth",
+      "key": "bandwidth_mbps",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "theme": "Red", 
+  "columns": [
+    {
+      "header": "Server",
+      "key": "name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage", 
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Memory Usage", 
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

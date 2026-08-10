@@ -1,0 +1,30 @@
+{
+  "theme": "Red",
+  "footer": "Detailed Summary Performance and Configuration Analysis Report for Q2 2023",
+  "columns": [
+    {
+      "header": "ID Number",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Server Name Identifier",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "CPU Cores Count",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right"
+    },
+    {
+      "header": "Load Average Value",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right"
+    }
+  ]
+}

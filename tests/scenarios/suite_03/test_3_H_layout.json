@@ -1,0 +1,34 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "left",
+      "break": true
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 15
+    },
+    {
+      "header": "Tags",
+      "key": "tags",
+      "datatype": "text",
+      "justification": "left",
+      "width": 10,
+      "wrap_mode": "wrap",
+      "wrap_char": ","
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "Server Name",
+      "key": "name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "none"
+    },
+    {
+      "header": "Status", 
+      "key": "status",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Total CPU",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Load Average",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "max"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "center",
+      "width": 40,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}

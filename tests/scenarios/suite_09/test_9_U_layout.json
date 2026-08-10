@@ -1,0 +1,38 @@
+{
+  "theme": "Red",
+  "title": "Dynamic Dual Command Footer Test",
+  "title_position": "center",
+  "footer": "Generated on $(date +%Y-%m-%d) at $(uptime | cut -d' ' -f2-3)",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count",
+      "break": true
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "width": 75,
+      "wrap_mode": "wrap",
+      "justification": "left"
+    },    
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

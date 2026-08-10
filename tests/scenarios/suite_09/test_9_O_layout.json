@@ -1,0 +1,30 @@
+{
+  "theme": "Red",
+  "title": "Server Descriptions Catalog",
+  "title_position": "right",
+  "footer": "Descriptions for Documentation",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 30,
+      "wrap_mode": "wrap"
+    }
+  ]
+}

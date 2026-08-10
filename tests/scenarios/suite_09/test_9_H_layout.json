@@ -1,0 +1,44 @@
+{
+  "theme": "Blue",
+  "title": "Detailed Server Specifications",
+  "title_position": "full",
+  "footer": "Specifications Compiled for Review",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Memory",
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 25,
+      "wrap_mode": "wrap"
+    }
+  ]
+}

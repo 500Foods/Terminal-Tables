@@ -1,0 +1,35 @@
+{
+  "theme": "Red",
+  "footer": "Server Overview Report",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

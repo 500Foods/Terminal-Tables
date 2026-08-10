@@ -187,6 +187,23 @@ Each column in the `columns` array can have the following properties:
 
 The `visible` property allows you to hide specific columns from the table output without removing them from the data processing. Setting `"visible": false` in a column's configuration will exclude that column from the rendered table, ensuring that it does not affect the layout or border calculations. This is useful for including data in the JSON that you might need for sorting or other processing but do not wish to display. In particular, this is useful for adding a custom break value, where the break value itself doesn't need to be visible. For example, in a file listing, a folder column could be present, but not shown, such that extra separator lines could be drawn between folders.
 
+### Annotated Rows
+
+Data rows may include an optional `"annotate": true` flag. Annotated rows are rendered like any other row (and still participate in column width and break calculations) but are **excluded from all summary aggregations** (`sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`).
+
+Use annotated rows for informational lines such as notes, labels, or metrics that should appear in the table body without skewing totals. Combine with a hidden `break` column if you want a separator before/after the annotated row.
+
+**Example data row:**
+
+```json
+{
+  "annotate": true,
+  "name": "Lines of Code",
+  "bash": 1384,
+  "c": 3467
+}
+```
+
 ## Supported Data Types
 
 Tables.sh supports the following data types:

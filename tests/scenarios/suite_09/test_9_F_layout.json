@@ -1,0 +1,36 @@
+{
+  "theme": "Blue",
+  "title": "Network Bandwidth Analysis",
+  "title_position": "left",
+  "footer": "Data Source: Network Monitoring System",
+  "footer_position": "left",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Bandwidth (Mbps)",
+      "key": "bandwidth_mbps",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Location",
+      "key": "location",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    }
+  ]
+}

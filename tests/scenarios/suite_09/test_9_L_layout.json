@@ -1,0 +1,44 @@
+{
+  "theme": "Blue",
+  "title": "Server Category Breakdown",
+  "title_position": "left",
+  "footer": "Category Analysis for Resource Allocation",
+  "footer_position": "left",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "left",
+      "break": true,
+      "summary": "unique"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Memory",
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

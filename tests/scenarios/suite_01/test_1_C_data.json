@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "web-server-01",
+    "cpu_cores": 4,
+    "load_avg": 2.45,
+    "cpu_usage": "1250m",
+    "memory_usage": "2048Mi",
+    "status": "Running"
+  },
+  {
+    "id": 2,
+    "name": "db-server-01",
+    "cpu_cores": 8,
+    "load_avg": 5.12,
+    "cpu_usage": "3200m",
+    "memory_usage": "8192Mi", 
+    "status": "Running"
+  },
+  {
+    "id": 3,
+    "name": "cache-server",
+    "cpu_cores": 2,
+    "load_avg": 0.85,
+    "cpu_usage": "500m",
+    "memory_usage": "1024Mi",
+    "status": "Starting"
+  },
+  {
+    "id": 4,
+    "name": "api-gateway",
+    "cpu_cores": 6,
+    "load_avg": 3.21,
+    "cpu_usage": "2100m",
+    "memory_usage": "4096Mi",
+    "status": "{YELLOW}Running{RESET}"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "theme": "Red",
+  "title": "Color Test - {WHITE}WHITE{RESET} and {RED}RED{RESET} in Title",
+  "title_position": "center",
+  "columns": [
+    {
+      "header": "Name",
+      "key": "name",
+      "justification": "left",
+      "datatype": "text",
+      "width": 20
+    },
+    {
+      "header": "Status",
+      "key": "status", 
+      "justification": "center",
+      "datatype": "text",
+      "width": 25
+    },
+    {
+      "header": "Value",
+      "key": "value",
+      "justification": "right", 
+      "datatype": "int",
+      "width": 15
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "simple": "{RED}Red{RESET}",
+    "nested": "{BOLD}{RED}Bold Red{RESET}{RESET}",
+    "multiple": "{RED}R{GREEN}G{BLUE}B{RESET}",
+    "mixed": "Start {YELLOW}Yellow{RESET} End"
+  },
+  {
+    "simple": "Plain text",
+    "nested": "{UNDERLINE}{CYAN}Underlined Cyan{RESET}",
+    "multiple": "{WHITE}{BOLD}Bold White{RESET}",
+    "mixed": "{DIM}Dim{RESET} and {BRIGHT}Bright{RESET}"
+  },
+  {
+    "simple": "{GREEN}Very long green text that should be clipped{RESET}",
+    "nested": "No color but very long text that should also be clipped",
+    "multiple": "{RED}A{BLUE}B{GREEN}C{YELLOW}D{CYAN}E{MAGENTA}F{RESET}",
+    "mixed": "Mix of {RED}red{RESET} and normal text here"
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Name",
+      "key": "name", 
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right"
+    },
+    {
+      "header": "Load",
+      "key": "load_avg",
+      "datatype": "float", 
+      "justification": "right"
+    },
+    {
+      "header": "CPU",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right"
+    },
+    {
+      "header": "Memory", 
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right"
+    }
+  ]
+}

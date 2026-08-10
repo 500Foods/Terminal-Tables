@@ -1,0 +1,36 @@
+{
+  "theme": "Blue",
+  "title": "Network Bandwidth Utilization Report for All Data Centers and Regions Worldwide",
+  "title_position": "full",
+  "footer": "Bandwidth Metrics for Network Optimization",
+  "footer_position": "left",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Location",
+      "key": "location",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Bandwidth (Mbps)",
+      "key": "bandwidth_mbps",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

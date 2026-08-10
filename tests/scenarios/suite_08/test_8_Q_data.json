@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "server_name": "web-server-01",
+    "cpu_cores": 4,
+    "memory_gb": 16,
+    "load_avg": 2.45,
+    "status": "Active",
+    "location": "US-East"
+  },
+  {
+    "id": 2,
+    "server_name": "db-server-01",
+    "cpu_cores": 8,
+    "memory_gb": 32,
+    "load_avg": 5.12,
+    "status": "Active",
+    "location": "US-West"
+  }
+]

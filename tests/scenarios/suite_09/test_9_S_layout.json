@@ -1,0 +1,59 @@
+{
+  "theme": "Red",
+  "title": "Ultimate Server Dashboard - All Metrics and Insights for Enterprise IT Management",
+  "title_position": "full",
+  "footer": "Complete Server Data for Strategic Decision Making - Generated on $(date +%Y-%m-%d)",
+  "footer_position": "full",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "left",
+      "break": true,
+      "summary": "unique"
+    },
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 20,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "center",
+      "summary": "avg"
+    },
+    {
+      "header": "Memory",
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

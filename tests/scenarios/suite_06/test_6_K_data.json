@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "server_name": "web-server-01",
+    "cpu_cores": 4,
+    "load_avg": 2.45
+  },
+  {
+    "id": 2,
+    "server_name": "db-server-01",
+    "cpu_cores": 8,
+    "load_avg": 5.12
+  },
+  {
+    "id": 3,
+    "server_name": "cache-server",
+    "cpu_cores": 2,
+    "load_avg": 0.85
+  },
+  {
+    "id": 4,
+    "server_name": "api-gateway",
+    "cpu_cores": 6,
+    "load_avg": 3.21
+  }
+]

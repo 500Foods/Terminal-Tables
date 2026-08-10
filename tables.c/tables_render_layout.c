@@ -28,8 +28,10 @@ void calculate_column_widths(TableConfig *config, TableData *data) {
         for (int i = 0; i < data->row_count; i++) {
             const char *value = data->rows[i].values[j];
             char *formatted = format_display_value_with_precision(value, col->null_val, col->zero_val, col->data_type, col->format, col->string_limit, col->wrap_mode, col->wrap_char, col->justify, data->summaries[j].max_decimal_places);
-            int width = get_display_width(formatted);
+            char *colored = replace_color_placeholders(formatted);
+            int width = get_display_width(colored);
             if (width > max_width) max_width = width;
+            free(colored);
             free(formatted);
         }
         

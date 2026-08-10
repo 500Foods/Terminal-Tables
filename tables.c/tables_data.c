@@ -139,6 +139,8 @@ int prepare_data(const char *data_file, TableConfig *config, TableData *data) {
         if (!json_is_object(row_obj)) continue;
         
         DataRow *row = &data->rows[i];
+        json_t *annotate_val = json_object_get(row_obj, "annotate");
+        row->annotate = json_is_true(annotate_val);
         row->values = malloc(config->column_count * sizeof(char *));
         if (row->values == NULL) {
             fprintf(stderr, "Error: Memory allocation failed for row values\n");
@@ -215,20 +217,19 @@ void process_data_rows(TableConfig *config, TableData *data) {
     for (int i = 0; i < data->row_count; i++) {
         DataRow *row = &data->rows[i];
         int line_count = 1;
-        
-        for (int j = 0; j < config->column_count; j++) {
-            ColumnConfig *col = &config->columns[j];
-            const char *value = row->values[j];
-            DataType data_type = col->data_type;
-            SummaryType summary_type = col->summary;
-            
-            // Update summaries
-            update_summaries(j, value, data_type, summary_type, &data->summaries[j]);
-            
-            // TODO: Calculate display width and update column widths if not specified
-            // TODO: Handle wrapping to determine line count
+
+        /* Annotated rows render normally but do not participate in summaries */
+        if (!row->annotate) {
+            for (int j = 0; j < config->column_count; j++) {
+                ColumnConfig *col = &config->columns[j];
+                const char *value = row->values[j];
+                DataType data_type = col->data_type;
+                SummaryType summary_type = col->summary;
+
+                update_summaries(j, value, data_type, summary_type, &data->summaries[j]);
+            }
         }
-        
+
         if (line_count > data->max_lines) {
             data->max_lines = line_count;
         }

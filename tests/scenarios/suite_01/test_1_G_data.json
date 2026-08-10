@@ -1,0 +1,22 @@
+[
+  {
+    "name": "{GREEN}Success Item{RESET}",
+    "status": "{WHITE}Processing{RESET}",
+    "value": 100
+  },
+  {
+    "name": "{RED}Error Item{RESET}",
+    "status": "{YELLOW}Warning Status{RESET}",
+    "value": 250
+  },
+  {
+    "name": "{BLUE}Info Item{RESET}",
+    "status": "{CYAN}Ready{RESET}",
+    "value": 75
+  },
+  {
+    "name": "{WHITE}Bright Item{RESET}",
+    "status": "{MAGENTA}Special{RESET}",
+    "value": 999
+  }
+]

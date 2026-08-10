@@ -1,0 +1,39 @@
+[
+  {
+    "group": "data",
+    "id": 1,
+    "name": "web-server-01",
+    "cpu_cores": 4
+  },
+  {
+    "group": "data",
+    "id": 2,
+    "name": "db-server-01",
+    "cpu_cores": 8
+  },
+  {
+    "group": "data",
+    "id": 3,
+    "name": "cache-server",
+    "cpu_cores": 2
+  },
+  {
+    "group": "data",
+    "id": 4,
+    "name": "api-gateway",
+    "cpu_cores": 6
+  },
+  {
+    "group": "data",
+    "id": 5,
+    "name": "backup-server",
+    "cpu_cores": 4
+  },
+  {
+    "group": "note",
+    "annotate": true,
+    "id": 999,
+    "name": "Lines of Code",
+    "cpu_cores": 1000
+  }
+]

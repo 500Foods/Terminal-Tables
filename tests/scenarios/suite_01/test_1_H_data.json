@@ -1,0 +1,17 @@
+[
+  {
+    "left_text": "{RED}This is a very long red text that will be clipped{RESET}",
+    "center_text": "{BLUE}This is a very long blue text that will be clipped{RESET}",
+    "right_text": "{GREEN}This is a very long green text that will be clipped{RESET}"
+  },
+  {
+    "left_text": "{YELLOW}Short{RESET}",
+    "center_text": "{CYAN}Medium text{RESET}",
+    "right_text": "{MAGENTA}Longer text here{RESET}"
+  },
+  {
+    "left_text": "No colors here",
+    "center_text": "{WHITE}Mixed {RED}colors {BLUE}in {GREEN}one{RESET}",
+    "right_text": "{BOLD}{UNDERLINE}Formatted text{RESET}"
+  }
+]

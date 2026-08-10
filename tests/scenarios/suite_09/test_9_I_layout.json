@@ -1,0 +1,44 @@
+{
+  "theme": "Red",
+  "title": "Server Distribution by Location",
+  "title_position": "center",
+  "footer": "Location Data for Infrastructure Planning",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Location",
+      "key": "location",
+      "datatype": "text",
+      "justification": "left",
+      "break": true,
+      "summary": "unique"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}

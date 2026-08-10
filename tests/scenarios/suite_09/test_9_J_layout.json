@@ -1,0 +1,36 @@
+{
+  "theme": "Blue",
+  "title": "Server Status Report",
+  "title_position": "center",
+  "footer": "Status Updated Hourly",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Uptime (Days)",
+      "key": "uptime_days",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "max"
+    }
+  ]
+}

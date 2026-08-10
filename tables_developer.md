@@ -465,6 +465,10 @@ parse_column_config() {
 
 The configuration system supports a `visible` property for each column, stored in the `VISIBLES[]` array. Setting `"visible": false` in a column's JSON configuration excludes it from the rendered table output without affecting data processing. This feature is useful for including data needed for sorting or other operations while keeping it hidden from the final display. The rendering system ensures that hidden columns do not impact table layout or border calculations.
 
+#### Annotated Rows
+
+Data rows may set `"annotate": true`. Both implementations store this as a per-row flag (`DataRow.annotate` in C, `ROW_ANNOTATE[]` in Bash). During `process_data_rows`, annotated rows are still formatted and rendered, but `update_summaries` is not called for them. Use this for informational lines (e.g. notes, LOC counts) that must not skew `sum`/`count`/etc. Pair with a hidden `break` column when a separator line is desired around the annotated row.
+
 ## Extension Examples
 
 ### Adding Column Calculations

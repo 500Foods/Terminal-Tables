@@ -1,0 +1,33 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "Test Int",
+      "key": "test_int",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "blanks"
+    },
+    {
+      "header": "Test Float",
+      "key": "test_float",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "nonblanks"
+    },
+    {
+      "header": "Test String",
+      "key": "test_string",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "blanks"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "nonblanks"
+    }
+  ]
+}

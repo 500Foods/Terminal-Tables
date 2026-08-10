@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "web-server-01",
+    "cpu_cores": 4,
+    "load_avg": 2.45,
+    "cpu_usage": "1250m",
+    "memory_usage": "2048Mi",
+    "status": "Running",
+    "test_int": 100,
+    "test_float": 1.23,
+    "test_string": "hello"
+  },
+  {
+    "id": 2,
+    "name": "db-server-01",
+    "cpu_cores": 8,
+    "load_avg": 5.12,
+    "cpu_usage": "3200m",
+    "memory_usage": "8192Mi",
+    "status": "Running",
+    "test_int": 0,
+    "test_float": 0.0,
+    "test_string": ""
+  },
+  {
+    "id": 3,
+    "name": "cache-server",
+    "cpu_cores": 2,
+    "load_avg": 0.85,
+    "cpu_usage": "500m",
+    "memory_usage": "1024Mi",
+    "status": "Starting",
+    "test_int": null,
+    "test_float": null,
+    "test_string": null
+  },
+  {
+    "id": 4,
+    "name": "api-gateway",
+    "cpu_cores": 6,
+    "load_avg": 3.21,
+    "cpu_usage": "2100m",
+    "memory_usage": "4096Mi",
+    "status": "Running",
+    "test_int": 200,
+    "test_float": 4.56,
+    "test_string": "world"
+  },
+  {
+    "id": 5,
+    "name": "backup-server",
+    "cpu_cores": 4,
+    "load_avg": 1.5,
+    "cpu_usage": "0m",
+    "memory_usage": "0Mi",
+    "status": "Idle",
+    "test_int": 0,
+    "test_float": 0.00,
+    "test_string": ""
+  }
+]

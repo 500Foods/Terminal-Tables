@@ -1,0 +1,28 @@
+{
+  "theme": "Blue",
+  "title": "{BOLD}Color Clipping Test with Different Justifications{RESET}",
+  "title_position": "center",
+  "columns": [
+    {
+      "header": "Left Clipped",
+      "key": "left_text",
+      "justification": "left",
+      "datatype": "text",
+      "width": 25
+    },
+    {
+      "header": "Center Clipped",
+      "key": "center_text", 
+      "justification": "center",
+      "datatype": "text",
+      "width": 25
+    },
+    {
+      "header": "Right Clipped",
+      "key": "right_text",
+      "justification": "right", 
+      "datatype": "text",
+      "width": 25
+    }
+  ]
+}

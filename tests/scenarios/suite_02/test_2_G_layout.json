@@ -1,0 +1,47 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "Sum",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Min",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Max",
+      "key": "cpu_cores", 
+      "datatype": "int",
+      "justification": "right",
+      "summary": "max"
+    },
+    {
+      "header": "Avg",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Count",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Unique",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "unique"
+    }
+  ]
+}

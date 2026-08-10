@@ -1,0 +1,47 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "Sum",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Min",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Max",
+      "key": "load_avg", 
+      "datatype": "float",
+      "justification": "right",
+      "summary": "max"
+    },
+    {
+      "header": "Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Count",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Unique",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "unique"
+    }
+  ]
+}

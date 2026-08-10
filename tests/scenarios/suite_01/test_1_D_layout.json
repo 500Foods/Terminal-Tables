@@ -1,0 +1,23 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int", 
+      "justification": "center"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center"
+    },
+    {
+      "header": "Load",
+      "key": "load_avg", 
+      "datatype": "float",
+      "justification": "center"
+    }
+  ]
+}

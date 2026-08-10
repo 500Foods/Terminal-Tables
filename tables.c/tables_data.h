@@ -12,6 +12,7 @@
 /* Structure to hold a single data row */
 typedef struct {
     char **values;          /* Array of string values for each column */
+    int annotate;           /* If set, row is display-only (skipped in summaries) */
 } DataRow;
 
 /* Structure to hold summary statistics for a column */

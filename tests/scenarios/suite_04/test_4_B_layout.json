@@ -1,0 +1,42 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Memory Usage",
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Tags",
+      "key": "tags",
+      "datatype": "text",
+      "justification": "left",
+      "width": 25,
+      "wrap_mode": "wrap",
+      "wrap_char": ","
+    }
+  ]
+}

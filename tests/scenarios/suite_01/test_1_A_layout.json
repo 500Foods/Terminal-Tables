@@ -1,0 +1,30 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "ID2",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "visible": false
+    },
+    {
+      "header": "Server Name", 
+      "key": "name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Status",
+      "key": "status", 
+      "datatype": "text",
+      "justification": "center"
+    }
+  ]
+}

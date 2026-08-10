@@ -1,0 +1,56 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "Sum CPU",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Min Load",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Max Load",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "max"
+    },
+    {
+      "header": "Avg CPU",
+      "key": "cpu_cores",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Count",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Unique Cat",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Tags",
+      "key": "tags",
+      "datatype": "text",
+      "justification": "right",
+      "width": 20,
+      "wrap_mode": "wrap",
+      "wrap_char": ","
+    }
+  ]
+}

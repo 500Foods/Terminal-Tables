@@ -1,0 +1,52 @@
+{
+  "theme": "Red",
+  "title": "Enterprise Server Management System",
+  "title_position": "center",
+  "footer": "Detailed Analytics and Performance Metrics for Strategic Planning - IT Dept. $(date +%Y)",
+  "footer_position": "full",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "right",
+      "width": 25,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "center",
+      "summary": "max"
+    }
+  ]
+}

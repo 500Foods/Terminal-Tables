@@ -1,0 +1,23 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "Left Text",
+      "key": "name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Center Text",
+      "key": "status", 
+      "datatype": "text",
+      "justification": "center"
+    },
+    {
+      "header": "Right Text",
+      "key": "name",
+      "datatype": "text",
+      "justification": "right"
+    }
+  ]
+}

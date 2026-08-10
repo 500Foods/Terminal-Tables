@@ -1,0 +1,43 @@
+{
+  "theme": "Blue",
+  "title": "Detailed Uptime Analysis",
+  "title_position": "center",
+  "footer": "Uptime Metrics for Reliability Assessment",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Uptime (Days)",
+      "key": "uptime_days",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Location",
+      "key": "location",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "unique"
+    }
+  ]
+}

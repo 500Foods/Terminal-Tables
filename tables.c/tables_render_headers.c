@@ -75,7 +75,14 @@ void render_header_separator(TableConfig *config) {
         for (int w = 0; w < config->columns[j].width; w++) {
             printf("%s", config->theme.h_line);
         }
-        if (j < config->column_count - 1) {
+        int next_visible = 0;
+        for (int k = j + 1; k < config->column_count; k++) {
+            if (config->columns[k].visible) {
+                next_visible = 1;
+                break;
+            }
+        }
+        if (next_visible) {
             printf("%s", config->theme.cross);
         }
     }

@@ -1,0 +1,23 @@
+{
+  "theme": "Blue",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id", 
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num", 
+      "justification": "right"
+    },
+    {
+      "header": "Load Average",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right"
+    }
+  ]
+}

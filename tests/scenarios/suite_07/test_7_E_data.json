@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "server_name": "web-server-01",
+    "category": "Web",
+    "cpu_cores": 4,
+    "load_avg": 2.45,
+    "cpu_usage": "1250m",
+    "memory_usage": "2048Mi",
+    "status": "Running",
+    "description": "Primary web server for frontend applications with a detailed setup.",
+    "tags": "frontend,app,ui,primary,loadbalancer"
+  },
+  {
+    "id": 2,
+    "server_name": "db-server-01",
+    "category": "Database",
+    "cpu_cores": 8,
+    "load_avg": 5.12,
+    "cpu_usage": "3200m",
+    "memory_usage": "8192Mi", 
+    "status": "Running",
+    "description": "Main database server handling critical data operations.",
+    "tags": "db,sql,storage,primary,backend"
+  },
+  {
+    "id": 3,
+    "server_name": "cache-server",
+    "category": "Cache",
+    "cpu_cores": 2,
+    "load_avg": 0.85,
+    "cpu_usage": "500m",
+    "memory_usage": "1024Mi",
+    "status": "Starting",
+    "description": "In-memory cache for speeding up data access.",
+    "tags": "cache,redis,fast,memory"
+  },
+  {
+    "id": 4,
+    "server_name": "api-gateway",
+    "category": "Web",
+    "cpu_cores": 6,
+    "load_avg": 3.21,
+    "cpu_usage": "2100m",
+    "memory_usage": "4096Mi",
+    "status": "Running",
+    "description": "API gateway managing incoming requests and routing.",
+    "tags": "api,gateway,routing,web,interface"
+  }
+]

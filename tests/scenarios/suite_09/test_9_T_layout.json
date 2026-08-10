@@ -1,0 +1,51 @@
+{
+  "theme": "Blue",
+  "title": "Final Showcase of Server Analytics",
+  "title_position": "center",
+  "footer": "End of Comprehensive Server Report - IT Team $(date +%Y)",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "right",
+      "summary": "unique"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "center",
+      "summary": "max"
+    },
+    {
+      "header": "Bandwidth",
+      "key": "bandwidth_mbps",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "theme": "Red",
+  "title": "Performance Metrics Dashboard",
+  "title_position": "left",
+  "footer": "Performance Data for System Optimization and Capacity Planning - IT Operations Team",
+  "footer_position": "full",
+  "columns": [
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Bandwidth (Mbps)",
+      "key": "bandwidth_mbps",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "max"
+    }
+  ]
+}

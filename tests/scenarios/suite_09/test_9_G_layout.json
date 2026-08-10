@@ -1,0 +1,36 @@
+{
+  "theme": "Red",
+  "title": "Server Uptime Report",
+  "title_position": "center",
+  "footer": "Uptime Data as of Today",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Uptime (Days)",
+      "key": "uptime_days",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    }
+  ]
+}

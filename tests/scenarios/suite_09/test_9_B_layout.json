@@ -1,0 +1,36 @@
+{
+  "theme": "Blue",
+  "title": "Server Performance Report Q2 2023",
+  "title_position": "left",
+  "footer": "Data Compiled by IT Department",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 30,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}
