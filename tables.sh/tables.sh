@@ -96,12 +96,12 @@ format_text() {
         fi
     else echo "$value"; fi
 }
-format_numeric() { local value="$1" format="$2" use_commas="$3"; [[ -z "$value" || "$value" == "null" || "$value" == "0" ]] && { echo ""; return; }; if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then if [[ -n "$format" ]]; then printf '%s' "$value"; elif [[ "$use_commas" == "true" ]]; then format_with_commas "$value"; else echo "$value"; fi; else echo "$value"; fi; }
+format_numeric() { local value="$1" format="$2" use_commas="$3"; [[ -z "$value" || "$value" == "null" || "$value" == "0" || "$value" =~ ^0+(\.0+)?$ ]] && { echo ""; return; }; if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then if [[ -n "$format" ]]; then printf '%s' "$value"; elif [[ "$use_commas" == "true" ]]; then format_with_commas "$value"; else echo "$value"; fi; else echo "$value"; fi; }
 format_number() { format_numeric "$1" "$2" "true"; }
 format_num() { format_numeric "$1" "$2" "true"; }
 format_float() {
     local value="$1" format="$2" string_limit="$3" wrap_mode="$4" wrap_char="$5" column_index="$6"
-    [[ -z "$value" || "$value" == "null" || "$value" == "0" ]] && { echo ""; return; }
+    [[ -z "$value" || "$value" == "null" || "$value" == "0" || "$value" =~ ^0+(\.0+)?$ ]] && { echo ""; return; }
     
     if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         local max_decimals="${MAX_DECIMAL_PLACES[$column_index]:-2}"
@@ -260,18 +260,23 @@ prepare_data() {
     local row_count
     row_count=$(jq '. | length' <<<"$data_json")
     [[ $row_count -eq 0 ]] && return
-        local jq_expr=".[] | ["
-        for key in "${KEYS[@]}"; do jq_expr+=".${key} // null,"; done
-        jq_expr="${jq_expr%,}] | join(\"\t\")"
-        local all_data
-        all_data=$(jq -r "$jq_expr" "$data_file")
+    local jq_expr=".[] | ["
+    for key in "${KEYS[@]}"; do jq_expr+=".${key} // null,"; done
+    jq_expr="${jq_expr%,}] | join(\"\t\")"
+    local all_data
+    all_data=$(jq -r "$jq_expr" "$data_file")
     IFS=$'\n' read -d '' -r -a rows <<< "$all_data"
     for ((i=0; i<row_count; i++)); do
-        IFS=$'\t' read -r -a values <<< "${rows[$i]}"
+        local line="${rows[$i]}"
+        line="${line%$'\n'}"
         declare -A row_data
+        local -a values
+        mapfile -t -d $'\t' values <<< "$line"
+        # Strip trailing newline from last element (added by herestring)
+        [[ ${#values[@]} -gt 0 ]] && values[${#values[@]} - 1]="${values[${#values[@]} - 1]%$'\n'}"
         for ((j=0; j<${#KEYS[@]}; j++)); do
             local key="${KEYS[$j]}" value="${values[$j]}"
-            [[ "$value" == "null" ]] && value="null" || value="${value:-null}"
+            [[ "$value" == "null" || -z "$value" ]] && value="null" || value="${value:-null}"
             row_data["$key"]="$value"
         done
         local row_data_str
@@ -326,9 +331,7 @@ process_data_rows() {
             if [[ "$validated_value" == "null" ]]; then
                 case "${NULL_VALUES[$j]}" in 0) display_value="0";; missing) display_value="Missing";; *) display_value="";; esac
             elif [[ "$datatype" == "int" || "$datatype" == "num" || "$datatype" == "float" || "$datatype" == "kcpu" || "$datatype" == "kmem" ]]; then
-                local is_zero=0 num_val=$(echo "$validated_value" | awk '{print ($1 + 0)}')
-                if [[ $(echo "if ($num_val == 0) 1 else 0" | bc) -eq 1 ]]; then is_zero=1; fi
-                if [[ $is_zero -eq 1 ]]; then
+                if [[ "$validated_value" == "0" || "$validated_value" == "0m" || "$validated_value" == "0M" || "$validated_value" == "0G" || "$validated_value" == "0K" || "$validated_value" =~ ^0+(\.0+)?$ ]]; then
                     case "${ZERO_VALUES[$j]}" in 0) display_value="0";; missing) display_value="Missing";; *) display_value="";; esac
                 fi
             fi
@@ -540,10 +543,10 @@ format_summary_value() {
                     local avg_result=$(awk "BEGIN {printf \"%.${decimals}f\", (${AVG_SUMMARIES[$j]}) / (${AVG_COUNTS[$j]})}")
                     summary_value=$(format_with_commas "$avg_result")
                 elif [[ "$datatype" == "int" ]]; then
-                    local avg_result=$((${AVG_SUMMARIES[$j]} / ${AVG_COUNTS[$j]}))
+                    local avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[$j]}) / (${AVG_COUNTS[$j]})}")
                     summary_value=$(format_with_commas "$avg_result")
                 elif [[ "$datatype" == "num" ]]; then
-                    local avg_result=$((${AVG_SUMMARIES[$j]} / ${AVG_COUNTS[$j]}))
+                    local avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[$j]}) / (${AVG_COUNTS[$j]})}")
                     summary_value=$(format_num "$avg_result" "$format")
                 else
                     summary_value="$((${AVG_SUMMARIES[$j]} / ${AVG_COUNTS[$j]}))"
@@ -735,12 +738,26 @@ render_table_element() {
     if [[ "$element_type" == "title" ]]; then
         [[ $offset -gt 0 ]] && printf "%*s" "$offset" ""
         printf "${THEME[border_color]}%s" "${THEME[tl_corner]}"
-        printf "${THEME[h_line]}%.0s" $(seq 1 "$element_width")
+        printf "${THEME[h_line]}%.0s" $(eval "echo {1..$element_width}")
         printf "%s${THEME[text_color]}\n" "${THEME[tr_corner]}"
     fi
     [[ $offset -gt 0 ]] && printf "%*s" "$offset" ""
     printf "${THEME[border_color]}%s${THEME[text_color]}" "${THEME[v_line]}"
     local available_width=$((element_width - (2 * DEFAULT_PADDING)))
+    # Pre-clip to total_table_width (matching C behavior)
+    if [[ "$element_type" == "title" || "$element_type" == "footer" ]]; then
+        if [[ "$element_position" == "left" || "$element_position" == "center" || "$element_position" == "right" ]]; then
+            local text_len
+            text_len=$(get_display_length "$element_text")
+            local max_element_width=$((total_table_width - (2 * DEFAULT_PADDING)))
+            if [[ $text_len -gt $max_element_width ]]; then
+                # Title pre-clip uses left (clip_text_to_width in C), footer uses position
+                local pre_clip_pos="left"
+                [[ "$element_type" == "footer" ]] && pre_clip_pos="$element_position"
+                element_text=$(clip_text "$element_text" "$max_element_width" "$pre_clip_pos")
+            fi
+        fi
+    fi
     element_text=$(clip_text "$element_text" "$available_width" "$element_position")
     case "$element_position" in
         left) printf "%*s${color_theme}%-*s${NC}%*s" "$DEFAULT_PADDING" "" "$available_width" "$element_text" "$DEFAULT_PADDING" "" ;;
@@ -750,10 +767,10 @@ render_table_element() {
         *) printf "%*s${color_theme}%s${NC}%*s" "$DEFAULT_PADDING" "" "$element_text" "$DEFAULT_PADDING" "" ;;
     esac
     printf "${THEME[border_color]}%s${THEME[text_color]}\n" "${THEME[v_line]}"
-    if [[ "$element_type" == "footer" ]]; then
+        if [[ "$element_type" == "footer" ]]; then
         [[ $offset -gt 0 ]] && printf "%*s" "$offset" ""
         echo -ne "${THEME[border_color]}${THEME[bl_corner]}"
-        for i in $(seq 1 "$element_width"); do echo -ne "${THEME[h_line]}"; done
+        printf "${THEME[h_line]}%.0s" $(eval "echo {1..$element_width}")
         echo -ne "${THEME[br_corner]}${THEME[text_color]}\n"
     fi
 }
@@ -901,16 +918,14 @@ render_data_rows() {
             local key="${KEYS[$j]}" value
             value="${row_data[$key]}"
             local display_value
+            local datatype="${DATATYPES[j]}"
             local validate_fn="${DATATYPE_HANDLERS[${DATATYPES[j]}_validate]}"
             local validated_value=$("$validate_fn" "$value")
             display_value=$("${DATATYPE_HANDLERS[${DATATYPES[j]}_format]}" "$validated_value" "${FORMATS[j]}" "${STRING_LIMITS[j]}" "${WRAP_MODES[j]}" "${WRAP_CHARS[j]}" "$j")
             if [[ "$validated_value" == "null" ]]; then
                 case "${NULL_VALUES[j]}" in 0) display_value="0";; missing) display_value="Missing";; *) display_value="";; esac
             elif [[ "$datatype" == "int" || "$datatype" == "num" || "$datatype" == "float" || "$datatype" == "kcpu" || "$datatype" == "kmem" ]]; then
-                local is_zero=0
-                local num_val=$(echo "$validated_value" | awk '{print $1 + 0}')
-                if [[ $(echo "if ($num_val == 0) 1 else 0" | bc) -eq 1 ]]; then is_zero=1; fi
-                if [[ $is_zero -eq 1 ]]; then
+                if [[ "$validated_value" == "0" || "$validated_value" == "0m" || "$validated_value" == "0M" || "$validated_value" == "0G" || "$validated_value" == "0K" || "$validated_value" =~ ^0+(\.0+)?$ ]]; then
                     case "${ZERO_VALUES[j]}" in 0) display_value="0";; missing) display_value="Missing";; *) display_value="";; esac
                 fi
             fi
