@@ -13,19 +13,19 @@ While this project is currently under active development, feel free to give it a
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2026-08-10 18:23:35 UTC
+Last updated at 2026-08-10 21:26:24 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
 JSON                           109              0              0           4709
-C                               14            350            420           3232
-Markdown                         7            660              2           2237
-Bourne Shell                     3            169            189           1864
-C/C++ Header                    13             80            126            240
+C                               14            356           1391           3290
+Markdown                         7            668              2           2244
+Bourne Shell                     3            172            193           1953
+C/C++ Header                    13             81            351            240
 YAML                             2              4              0             66
 make                             1              6              8             32
 -------------------------------------------------------------------------------
-SUM:                           149           1269            745          12380
+SUM:                           149           1287           1945          12534
 -------------------------------------------------------------------------------
 87 Files were skipped (duplicate, binary, or without source code):
   json: 83
