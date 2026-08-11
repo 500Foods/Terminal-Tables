@@ -72,6 +72,9 @@ handle.
 ---
 
 ## 3-A — No width means no limit
+
+<!-- screenshot:3-A -->
+
 **What it demonstrates.** The baseline. With no `width`, a column grows to fit its widest
 value, however absurd that is.
 
@@ -105,10 +108,17 @@ value, however absurd that is.
 
 **Output** *(this block scrolls horizontally — the real line is 327 characters wide)*
 
-**Output**
-
-![3-A output](images/3-A.svg)
-
+```text
+╭────┬──────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ID │ Category │ Description                                                                                                                                                                                                                                                                                                         │
+├────┼──────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  1 │ Web      │ Primary                                                                                                                                                                                                                                                                                                             │
+│  2 │ Web      │ Secondary web server with a very long description to test wrapping functionality. This description is extended to be over 125 characters to ensure that it will wrap when a width of 75 is set in the test. Additional text is added here to meet the length requirement for thorough testing of wrapping behavior. │
+│  3 │ Database │ Main database server                                                                                                                                                                                                                                                                                                │
+│  4 │ Database │ Replica database                                                                                                                                                                                                                                                                                                    │
+│  5 │ Cache    │ In-memory cache                                                                                                                                                                                                                                                                                                     │
+╰────┴──────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -123,6 +133,9 @@ value, however absurd that is.
 ---
 
 ## 3-B — A fixed width clips from the right
+
+<!-- screenshot:3-B -->
+
 **What it demonstrates.** The default overflow behaviour, `clip`, on a left-justified
 column.
 
@@ -157,9 +170,17 @@ column.
 
 **Output**
 
-
-
-![3-B output](images/3-B.svg)
+```text
+╭────┬──────────┬──────────╮
+│ ID │ Category │ Descript │
+├────┼──────────┼──────────┤
+│  1 │ Web      │ Primary  │
+│  2 │ Web      │ Secondar │
+│  3 │ Database │ Main dat │
+│  4 │ Database │ Replica  │
+│  5 │ Cache    │ In-memor │
+╰────┴──────────┴──────────╯
+```
 
 **What to look for**
 
@@ -176,6 +197,9 @@ column.
 ---
 
 ## 3-C — Right-justified clipping keeps the tail
+
+<!-- screenshot:3-C -->
+
 **What it demonstrates.** The same clip against a right-justified column, which preserves
 the opposite end of the string.
 
@@ -210,9 +234,17 @@ the opposite end of the string.
 
 **Output**
 
-
-
-![3-C output](images/3-C.svg)
+```text
+╭────┬──────────┬───────────╮
+│ ID │ Category │ scription │
+├────┼──────────┼───────────┤
+│  1 │ Web      │   Primary │
+│  2 │ Web      │ behavior. │
+│  3 │ Database │ se server │
+│  4 │ Database │  database │
+│  5 │ Cache    │ ory cache │
+╰────┴──────────┴───────────╯
+```
 
 **What to look for**
 
@@ -228,6 +260,9 @@ the opposite end of the string.
 ---
 
 ## 3-D — Centred clipping keeps the middle
+
+<!-- screenshot:3-D -->
+
 **What it demonstrates.** The third case, completing the pattern.
 
 **Layout** — `tests/scenarios/suite_03/test_3_D_layout.json`
@@ -261,9 +296,17 @@ the opposite end of the string.
 
 **Output**
 
-
-
-![3-D output](images/3-D.svg)
+```text
+╭────┬──────────┬───────────────╮
+│ ID │ Category │  Description  │
+├────┼──────────┼───────────────┤
+│  1 │ Web      │    Primary    │
+│  2 │ Web      │ that it will  │
+│  3 │ Database │ n database se │
+│  4 │ Database │ eplica databa │
+│  5 │ Cache    │ n-memory cach │
+╰────┴──────────┴───────────────╯
+```
 
 **What to look for**
 
@@ -278,6 +321,9 @@ the opposite end of the string.
 ---
 
 ## 3-E — Wrapping on a delimiter with `wrap_char`
+
+<!-- screenshot:3-E -->
+
 **What it demonstrates.** `wrap_mode: "wrap"` combined with `wrap_char: ","`, turning a
 comma-separated field into a vertical list.
 
@@ -314,9 +360,29 @@ comma-separated field into a vertical list.
 
 **Output**
 
-
-
-![3-E output](images/3-E.svg)
+```text
+╭────┬──────────┬───────────────╮
+│ ID │ Category │ Tags          │
+├────┼──────────┼───────────────┤
+│  1 │ Web      │ frontend      │
+│    │          │ app           │
+│    │          │ ui            │
+│  2 │ Web      │ frontend      │
+│    │          │ backup        │
+│    │          │ loadbalancer  │
+│    │          │ highavailabil │
+│    │          │ performance   │
+│  3 │ Database │ db            │
+│    │          │ sql           │
+│    │          │ storage       │
+│  4 │ Database │ db            │
+│    │          │ replica       │
+│    │          │ read          │
+│  5 │ Cache    │ cache         │
+│    │          │ redis         │
+│    │          │ fast          │
+╰────┴──────────┴───────────────╯
+```
 
 **What to look for**
 
@@ -335,6 +401,9 @@ comma-separated field into a vertical list.
 ---
 
 ## 3-F — Word wrapping with `wrap_mode`
+
+<!-- screenshot:3-F -->
+
 **What it demonstrates.** `wrap_mode: "wrap"` with no `wrap_char`, which falls back to
 breaking at word boundaries.
 
@@ -370,9 +439,37 @@ breaking at word boundaries.
 
 **Output**
 
-
-
-![3-F output](images/3-F.svg)
+```text
+╭────┬──────────┬────────────────────╮
+│ ID │ Category │ Description        │
+├────┼──────────┼────────────────────┤
+│  1 │ Web      │ Primary            │
+│  2 │ Web      │ Secondary web      │
+│    │          │ server with a very │
+│    │          │ long description   │
+│    │          │ to test wrapping   │
+│    │          │ functionality.     │
+│    │          │ This description   │
+│    │          │ is extended to be  │
+│    │          │ over 125           │
+│    │          │ characters to      │
+│    │          │ ensure that it     │
+│    │          │ will wrap when a   │
+│    │          │ width of 75 is set │
+│    │          │ in the test.       │
+│    │          │ Additional text is │
+│    │          │ added here to meet │
+│    │          │ the length         │
+│    │          │ requirement for    │
+│    │          │ thorough testing   │
+│    │          │ of wrapping        │
+│    │          │ behavior.          │
+│  3 │ Database │ Main database      │
+│    │          │ server             │
+│  4 │ Database │ Replica database   │
+│  5 │ Cache    │ In-memory cache    │
+╰────┴──────────┴────────────────────╯
+```
 
 **What to look for**
 
@@ -389,6 +486,9 @@ breaking at word boundaries.
 ---
 
 ## 3-G — `break` inserts a separator when a value changes
+
+<!-- screenshot:3-G -->
+
 **What it demonstrates.** Group separators, and how they combine with a clipped column.
 
 **Layout** — `tests/scenarios/suite_03/test_3_G_layout.json`
@@ -423,9 +523,19 @@ breaking at word boundaries.
 
 **Output**
 
-
-
-![3-G output](images/3-G.svg)
+```text
+╭────┬──────────┬────────────────────╮
+│ ID │ Category │ Description        │
+├────┼──────────┼────────────────────┤
+│  1 │ Web      │ Primary            │
+│  2 │ Web      │ Secondary web serv │
+├────┼──────────┼────────────────────┤
+│  3 │ Database │ Main database serv │
+│  4 │ Database │ Replica database   │
+├────┼──────────┼────────────────────┤
+│  5 │ Cache    │ In-memory cache    │
+╰────┴──────────┴────────────────────╯
+```
 
 **What to look for**
 
@@ -442,6 +552,9 @@ breaking at word boundaries.
 ---
 
 ## 3-H — Breaks, clipping and delimiter wrapping together
+
+<!-- screenshot:3-H -->
+
 **What it demonstrates.** Three constraints in one table: a `break` column, a clipped
 column, and a delimiter-wrapped column that makes rows multiple lines tall.
 
@@ -486,9 +599,31 @@ column, and a delimiter-wrapped column that makes rows multiple lines tall.
 
 **Output**
 
-
-
-![3-H output](images/3-H.svg)
+```text
+╭────┬──────────┬───────────────┬──────────╮
+│ ID │ Category │ Description   │ Tags     │
+├────┼──────────┼───────────────┼──────────┤
+│  1 │ Web      │ Primary       │ frontend │
+│    │          │               │ app      │
+│    │          │               │ ui       │
+│  2 │ Web      │ Secondary web │ frontend │
+│    │          │               │ backup   │
+│    │          │               │ loadbala │
+│    │          │               │ highavai │
+│    │          │               │ performa │
+├────┼──────────┼───────────────┼──────────┤
+│  3 │ Database │ Main database │ db       │
+│    │          │               │ sql      │
+│    │          │               │ storage  │
+│  4 │ Database │ Replica datab │ db       │
+│    │          │               │ replica  │
+│    │          │               │ read     │
+├────┼──────────┼───────────────┼──────────┤
+│  5 │ Cache    │ In-memory cac │ cache    │
+│    │          │               │ redis    │
+│    │          │               │ fast     │
+╰────┴──────────┴───────────────┴──────────╯
+```
 
 **What to look for**
 
@@ -507,6 +642,9 @@ column, and a delimiter-wrapped column that makes rows multiple lines tall.
 ---
 
 ## 3-I — Right-justified delimiter wrapping
+
+<!-- screenshot:3-I -->
+
 **What it demonstrates.** The same `wrap_char` list as 3-E, but right-justified — which
 changes both where the tags sit and which part of an over-long tag survives.
 
@@ -543,9 +681,29 @@ changes both where the tags sit and which part of an over-long tag survives.
 
 **Output**
 
-
-
-![3-I output](images/3-I.svg)
+```text
+╭────┬──────────┬───────────────╮
+│ ID │ Category │          Tags │
+├────┼──────────┼───────────────┤
+│  1 │ Web      │      frontend │
+│    │          │           app │
+│    │          │            ui │
+│  2 │ Web      │      frontend │
+│    │          │        backup │
+│    │          │  loadbalancer │
+│    │          │ havailability │
+│    │          │   performance │
+│  3 │ Database │            db │
+│    │          │           sql │
+│    │          │       storage │
+│  4 │ Database │            db │
+│    │          │       replica │
+│    │          │          read │
+│  5 │ Cache    │         cache │
+│    │          │         redis │
+│    │          │          fast │
+╰────┴──────────┴───────────────╯
+```
 
 **What to look for**
 
@@ -560,6 +718,9 @@ changes both where the tags sit and which part of an over-long tag survives.
 ---
 
 ## 3-J — Centred delimiter wrapping
+
+<!-- screenshot:3-J -->
+
 **What it demonstrates.** The final corner of the wrap × justification matrix.
 
 **Layout** — `tests/scenarios/suite_03/test_3_J_layout.json`
@@ -595,9 +756,29 @@ changes both where the tags sit and which part of an over-long tag survives.
 
 **Output**
 
-
-
-![3-J output](images/3-J.svg)
+```text
+╭────┬──────────┬───────────────╮
+│ ID │ Category │     Tags      │
+├────┼──────────┼───────────────┤
+│  1 │ Web      │   frontend    │
+│    │          │      app      │
+│    │          │      ui       │
+│  2 │ Web      │   frontend    │
+│    │          │    backup     │
+│    │          │ loadbalancer  │
+│    │          │ ighavailabili │
+│    │          │  performance  │
+│  3 │ Database │      db       │
+│    │          │      sql      │
+│    │          │    storage    │
+│  4 │ Database │      db       │
+│    │          │    replica    │
+│    │          │     read      │
+│  5 │ Cache    │     cache     │
+│    │          │     redis     │
+│    │          │     fast      │
+╰────┴──────────┴───────────────╯
+```
 
 **What to look for**
 
@@ -612,6 +793,9 @@ changes both where the tags sit and which part of an over-long tag survives.
 ---
 
 ## 3-K — Wide column wrapping
+
+<!-- screenshot:3-K -->
+
 **What it demonstrates.** The same word wrapping as 3-F at a realistic report width,
 showing that `width` is a design decision rather than an emergency brake.
 
@@ -647,9 +831,21 @@ showing that `width` is a design decision rather than an emergency brake.
 
 **Output**
 
-
-
-![3-K output](images/3-K.svg)
+```text
+╭────┬──────────┬───────────────────────────────────────────────────────────────────────────╮
+│ ID │ Category │ Description                                                               │
+├────┼──────────┼───────────────────────────────────────────────────────────────────────────┤
+│  1 │ Web      │ Primary                                                                   │
+│  2 │ Web      │ Secondary web server with a very long description to test wrapping        │
+│    │          │ functionality. This description is extended to be over 125 characters to  │
+│    │          │ ensure that it will wrap when a width of 75 is set in the test.           │
+│    │          │ Additional text is added here to meet the length requirement for thorough │
+│    │          │ testing of wrapping behavior.                                             │
+│  3 │ Database │ Main database server                                                      │
+│  4 │ Database │ Replica database                                                          │
+│  5 │ Cache    │ In-memory cache                                                           │
+╰────┴──────────┴───────────────────────────────────────────────────────────────────────────╯
+```
 
 **What to look for**
 

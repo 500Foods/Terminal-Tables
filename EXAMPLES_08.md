@@ -80,6 +80,9 @@ Each example below lists only the fields that change.
 ---
 
 ## 8-A — Short footer, no position
+
+<!-- screenshot:8-A -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_A_layout.json`
 
 ```json
@@ -88,9 +91,18 @@ Each example below lists only the fields that change.
 
 **Output**
 
-
-
-![8-A output](images/8-A.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────┬───┴───────────┴──────────╯
+│ Summary Report │
+╰────────────────╯
+```
 
 **What to look for**
 
@@ -104,6 +116,9 @@ Each example below lists only the fields that change.
 ---
 
 ## 8-B — Footer exactly as wide as the table
+
+<!-- screenshot:8-B -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_B_layout.json`
 
 ```json
@@ -112,9 +127,18 @@ Each example below lists only the fields that change.
 
 **Output**
 
-
-
-![8-B output](images/8-B.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Summary Performance Metric Report Data 23 │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -128,6 +152,9 @@ Each example below lists only the fields that change.
 ---
 
 ## 8-C — An over-wide footer with no position
+
+<!-- screenshot:8-C -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_C_layout.json`, with expanded header
 text on every column
 
@@ -137,9 +164,18 @@ text on every column
 
 **Output**
 
-
-
-![8-C output](images/8-C.svg)
+```text
+╭───────────┬────────────────────────┬─────────────────┬────────────────────╮
+│ ID Number │ Server Name Identifier │ CPU Cores Count │ Load Average Value │
+├───────────┼────────────────────────┼─────────────────┼────────────────────┤
+│         1 │ web-server-01          │               4 │               2.45 │
+│         2 │ db-server-01           │               8 │               5.12 │
+│         3 │ cache-server           │               2 │               0.85 │
+│         4 │ api-gateway            │               6 │               3.21 │
+├───────────┴────────────────────────┴─────────────────┴────────────────────┴╮
+│ Detailed Summary Performance and Configuration Analysis Report for Q2 2023 │
+╰────────────────────────────────────────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -154,6 +190,9 @@ text on every column
 ---
 
 ## 8-D — Short footer, `left`
+
+<!-- screenshot:8-D -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_D_layout.json`
 
 ```json
@@ -164,9 +203,18 @@ text on every column
 
 **Output**
 
-
-
-![8-D output](images/8-D.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────┬───┴───────────┴──────────╯
+│ Summary Report │
+╰────────────────╯
+```
 
 **What to look for**
 
@@ -175,6 +223,9 @@ text on every column
 ---
 
 ## 8-E — Equal-width footer, `left`
+
+<!-- screenshot:8-E -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_E_layout.json`
 
 ```json
@@ -185,9 +236,18 @@ text on every column
 
 **Output**
 
-
-
-![8-E output](images/8-E.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Summary Performance Metric Report Data 23 │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -196,6 +256,9 @@ text on every column
 ---
 
 ## 8-F — Over-wide footer, `left`
+
+<!-- screenshot:8-F -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_F_layout.json`
 
 ```json
@@ -206,9 +269,18 @@ text on every column
 
 **Output**
 
-
-
-![8-F output](images/8-F.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Detailed Summary Performance and Configur │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -220,6 +292,9 @@ text on every column
 ---
 
 ## 8-G — Short footer, `center`
+
+<!-- screenshot:8-G -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_G_layout.json`
 
 ```json
@@ -229,9 +304,18 @@ text on every column
 
 **Output**
 
-
-
-![8-G output](images/8-G.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────┬───────┴────────┬──┴──────────╯
+             │ Summary Report │
+             ╰────────────────╯
+```
 
 **What to look for**
 
@@ -244,6 +328,9 @@ text on every column
 ---
 
 ## 8-H — Equal-width footer, `center`
+
+<!-- screenshot:8-H -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_H_layout.json`
 
 ```json
@@ -253,9 +340,18 @@ text on every column
 
 **Output**
 
-
-
-![8-H output](images/8-H.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Summary Performance Metric Report Data 23 │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -264,6 +360,9 @@ text on every column
 ---
 
 ## 8-I — Over-wide footer, `center`
+
+<!-- screenshot:8-I -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_I_layout.json`
 
 ```json
@@ -273,9 +372,18 @@ text on every column
 
 **Output**
 
-
-
-![8-I output](images/8-I.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│  Performance and Configuration Analysis R │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -293,6 +401,9 @@ text on every column
 ---
 
 ## 8-J — Short footer, `right`
+
+<!-- screenshot:8-J -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_J_layout.json`
 
 ```json
@@ -303,9 +414,18 @@ text on every column
 
 **Output**
 
-
-
-![8-J output](images/8-J.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────────────┴─────┬─────┴──────────┤
+                           │ Summary Report │
+                           ╰────────────────╯
+```
 
 **What to look for**
 
@@ -317,6 +437,9 @@ text on every column
 ---
 
 ## 8-K — Equal-width footer, `right`
+
+<!-- screenshot:8-K -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_K_layout.json`
 
 ```json
@@ -327,9 +450,18 @@ text on every column
 
 **Output**
 
-
-
-![8-K output](images/8-K.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Summary Performance Metric Report Data 23 │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -338,6 +470,9 @@ text on every column
 ---
 
 ## 8-L — Over-wide footer, `right`
+
+<!-- screenshot:8-L -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_L_layout.json`
 
 ```json
@@ -348,9 +483,18 @@ text on every column
 
 **Output**
 
-
-
-![8-L output](images/8-L.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Configuration Analysis Report for Q2 2023 │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -362,6 +506,9 @@ text on every column
 ---
 
 ## 8-M — Full-width footer with a colour placeholder
+
+<!-- screenshot:8-M -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_M_layout.json`
 
 ```json
@@ -372,9 +519,18 @@ text on every column
 
 **Output**
 
-
-
-![8-M output](images/8-M.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│              Summary Report               │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -389,6 +545,9 @@ text on every column
 ---
 
 ## 8-N — Full-width footer that overflows
+
+<!-- screenshot:8-N -->
+
 **Layout delta** — `tests/scenarios/suite_08/test_8_N_layout.json`
 
 ```json
@@ -399,9 +558,18 @@ text on every column
 
 **Output**
 
-
-
-![8-N output](images/8-N.svg)
+```text
+╭────┬───────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+├────┴───────────────┴───────────┴──────────┤
+│ Detailed Summary Performance and Configur │
+╰───────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -414,6 +582,9 @@ text on every column
 ---
 
 ## 8-O — Command substitution in a footer
+
+<!-- screenshot:8-O -->
+
 **What it demonstrates.** `$(...)` inside footer text is executed and its output
 interpolated before the table is measured.
 
@@ -507,9 +678,17 @@ interpolated before the table is measured.
 
 **Output**
 
-
-
-![8-O output](images/8-O.svg)
+```text
+╭────┬───────────────┬───────────┬─────────────┬──────────┬─────────┬────────────╮
+│ ID │ Server Name   │ CPU Cores │ Memory (GB) │ Load Avg │ Status  │ Location   │
+├────┼───────────────┼───────────┼─────────────┼──────────┼─────────┼────────────┤
+│  1 │ web-server-01 │         4 │          16 │     2.45 │ Active  │ US-East    │
+│  2 │ db-server-01  │         8 │          32 │     5.12 │ Active  │ US-West    │
+│  3 │ cache-server  │         2 │           8 │     0.85 │ Standby │ EU-Central │
+╰────┴───────────────┴───────────┴─┬───────────┴──────────┴─────────┴────────────┤
+                                   │ Date: Monday Date: August 10 Time: 15:29:04 │
+                                   ╰─────────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -528,6 +707,9 @@ interpolated before the table is measured.
 ---
 
 ## 8-P — Command substitution in both title and footer
+
+<!-- screenshot:8-P -->
+
 **What it demonstrates.** Dynamic content at both ends of the table, combined with colour
 placeholders used as decorative separators.
 
@@ -614,9 +796,18 @@ placeholders used as decorative separators.
 
 **Output**
 
-
-
-![8-P output](images/8-P.svg)
+```text
+                       ╭───────────────────────────────╮
+                       │ Report ── 2026-08-10 15:29:04 │
+╭────┬───────────────┬─┴─────────┬─────────────┬───────┴──┬────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Memory (GB) │ Load Avg │ Status │ Location │
+├────┼───────────────┼───────────┼─────────────┼──────────┼────────┼──────────┤
+│  1 │ web-server-01 │         4 │          16 │     2.45 │ Active │ US-East  │
+│  2 │ db-server-01  │         8 │          32 │     5.12 │ Active │ US-West  │
+╰────┴───────────────┴───────────┴───┬─────────┴──────────┴────────┴──────────┤
+                                     │ End ── Monday ── August 10 ── 15:29:04 │
+                                     ╰────────────────────────────────────────╯
+```
 
 **What to look for**
 
@@ -632,6 +823,9 @@ placeholders used as decorative separators.
 ---
 
 ## 8-Q — Unicode in title and footer
+
+<!-- screenshot:8-Q -->
+
 **What it demonstrates.** The same layout as 8-P with an emoji added to the title and
 dingbat check marks around the footer, exercising the display-width logic.
 
@@ -693,9 +887,18 @@ dingbat check marks around the footer, exercising the display-width logic.
 
 **Output**
 
-
-
-![8-Q output](images/8-Q.svg)
+```text
+                     ╭──────────────────────────────────╮
+                     │ Report ── 2026-08-10 15:29:04 😊 │
+╭────┬───────────────┼───────────┬─────────────┬────────┴─┬────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Memory (GB) │ Load Avg │ Status │ Location │
+├────┼───────────────┼───────────┼─────────────┼──────────┼────────┼──────────┤
+│  1 │ web-server-01 │         4 │          16 │     2.45 │ Active │ US-East  │
+│  2 │ db-server-01  │         8 │          32 │     5.12 │ Active │ US-West  │
+╰────┴───────────────┴───────────┼─────────────┴──────────┴────────┴──────────┤
+                                 │ ✓ End ── Monday ── August 10 ── 15:29:05 ✓ │
+                                 ╰────────────────────────────────────────────╯
+```
 
 **What to look for**
 

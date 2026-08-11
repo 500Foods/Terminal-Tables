@@ -109,6 +109,9 @@ the same datatype rules as the body, so a `num` total keeps its thousands separa
 ---
 
 ## 2-A — Sum and count
+
+<!-- screenshot:2-A -->
+
 **What it demonstrates.** The two aggregations you will reach for first, and the fact that
 a `count` is perfectly legal on a text column.
 
@@ -145,9 +148,19 @@ a `count` is perfectly legal on a text column.
 
 **Output**
 
-
-
-![2-A output](images/2-A.svg)
+```text
+╭────┬───────────────┬───────────╮
+│ ID │ Server Name   │ CPU Cores │
+├────┼───────────────┼───────────┤
+│  1 │ web-server-01 │         4 │
+│  2 │ db-server-01  │         8 │
+│  3 │ cache-server  │         2 │
+│  4 │ api-gateway   │         6 │
+│  5 │ backup-server │         4 │
+├────┼───────────────┼───────────┤
+│ 15 │ 5             │        24 │
+╰────┴───────────────┴───────────╯
+```
 
 **What to look for**
 
@@ -163,6 +176,9 @@ a `count` is perfectly legal on a text column.
 ---
 
 ## 2-B — Min and max
+
+<!-- screenshot:2-B -->
+
 **What it demonstrates.** Range aggregations, and that different columns in the same table
 can use different summaries.
 
@@ -199,9 +215,19 @@ can use different summaries.
 
 **Output**
 
-
-
-![2-B output](images/2-B.svg)
+```text
+╭────┬───────────┬──────────────╮
+│ ID │ CPU Cores │ Load Average │
+├────┼───────────┼──────────────┤
+│  1 │         4 │         2.45 │
+│  2 │         8 │         5.12 │
+│  3 │         2 │         0.85 │
+│  4 │         6 │         3.21 │
+│  5 │         4 │         1.50 │
+├────┼───────────┼──────────────┤
+│  1 │         8 │         0.85 │
+╰────┴───────────┴──────────────╯
+```
 
 **What to look for**
 
@@ -216,6 +242,9 @@ can use different summaries.
 ---
 
 ## 2-C — Summing Kubernetes quantities
+
+<!-- screenshot:2-C -->
+
 **What it demonstrates.** `sum` over `kcpu` and `kmem`, and how zero values are presented.
 
 **Layout** — `tests/scenarios/suite_02/test_2_C_layout.json`
@@ -251,9 +280,19 @@ can use different summaries.
 
 **Output**
 
-
-
-![2-C output](images/2-C.svg)
+```text
+╭───────────────┬───────────┬──────────────╮
+│ Server        │ CPU Usage │ Memory Usage │
+├───────────────┼───────────┼──────────────┤
+│ web-server-01 │    1,250m │       2,048M │
+│ db-server-01  │    3,200m │       8,192M │
+│ cache-server  │      500m │       1,024M │
+│ api-gateway   │    2,100m │       4,096M │
+│ backup-server │           │           0M │
+├───────────────┼───────────┼──────────────┤
+│ 5             │    7,050m │      15,360M │
+╰───────────────┴───────────┴──────────────╯
+```
 
 **What to look for**
 
@@ -270,6 +309,9 @@ can use different summaries.
 ---
 
 ## 2-D — Unique and average
+
+<!-- screenshot:2-D -->
+
 **What it demonstrates.** `unique` as a cardinality check, and `avg` on a float column.
 
 **Layout** — `tests/scenarios/suite_02/test_2_D_layout.json`
@@ -305,9 +347,19 @@ can use different summaries.
 
 **Output**
 
-
-
-![2-D output](images/2-D.svg)
+```text
+╭──────────┬───────────┬──────────────╮
+│  Status  │ CPU Cores │ Load Average │
+├──────────┼───────────┼──────────────┤
+│ Running  │         4 │         2.45 │
+│ Running  │         8 │         5.12 │
+│ Starting │         2 │         0.85 │
+│ Running  │         6 │         3.21 │
+│   Idle   │         4 │         1.50 │
+├──────────┼───────────┼──────────────┤
+│    3     │         4 │         2.63 │
+╰──────────┴───────────┴──────────────╯
+```
 
 **What to look for**
 
@@ -322,6 +374,9 @@ can use different summaries.
 ---
 
 ## 2-E — A summary on every column
+
+<!-- screenshot:2-E -->
+
 **What it demonstrates.** A realistic wide table in which each of the six columns carries
 whichever aggregation actually suits it.
 
@@ -379,9 +434,19 @@ whichever aggregation actually suits it.
 
 **Output**
 
-
-
-![2-E output](images/2-E.svg)
+```text
+╭────┬───────────────┬───────┬──────┬────────┬─────────╮
+│ ID │ Name          │ Cores │ Load │    CPU │  Memory │
+├────┼───────────────┼───────┼──────┼────────┼─────────┤
+│  1 │ web-server-01 │     4 │ 2.45 │ 1,250m │  2,048M │
+│  2 │ db-server-01  │     8 │ 5.12 │ 3,200m │  8,192M │
+│  3 │ cache-server  │     2 │ 0.85 │   500m │  1,024M │
+│  4 │ api-gateway   │     6 │ 3.21 │ 2,100m │  4,096M │
+│  5 │ backup-server │     4 │ 1.50 │        │      0M │
+├────┼───────────────┼───────┼──────┼────────┼─────────┤
+│ 15 │ 5             │     8 │ 0.85 │ 7,050m │ 15,360M │
+╰────┴───────────────┴───────┴──────┴────────┴─────────╯
+```
 
 **What to look for**
 
@@ -397,6 +462,9 @@ whichever aggregation actually suits it.
 ---
 
 ## 2-F — Opting a column out with `none`
+
+<!-- screenshot:2-F -->
+
 **What it demonstrates.** `"summary": "none"` — the explicit form of the default — and how
 a partially populated summary row is rendered.
 
@@ -433,9 +501,19 @@ a partially populated summary row is rendered.
 
 **Output**
 
-
-
-![2-F output](images/2-F.svg)
+```text
+╭───────────────┬──────────┬───────────╮
+│ Server Name   │  Status  │ Total CPU │
+├───────────────┼──────────┼───────────┤
+│ web-server-01 │ Running  │    1,250m │
+│ db-server-01  │ Running  │    3,200m │
+│ cache-server  │ Starting │      500m │
+│ api-gateway   │ Running  │    2,100m │
+│ backup-server │   Idle   │           │
+├───────────────┼──────────┼───────────┤
+│               │    3     │    7,050m │
+╰───────────────┴──────────┴───────────╯
+```
 
 **What to look for**
 
@@ -451,6 +529,9 @@ a partially populated summary row is rendered.
 ---
 
 ## 2-G — Every summary over an integer column
+
+<!-- screenshot:2-G -->
+
 **What it demonstrates.** The same `cpu_cores` field rendered six times, once per summary
 type, so the aggregations can be compared directly against a single set of inputs.
 
@@ -508,9 +589,19 @@ type, so the aggregations can be compared directly against a single set of input
 
 **Output**
 
-
-
-![2-G output](images/2-G.svg)
+```text
+╭─────┬─────┬─────┬─────┬───────┬────────╮
+│ Sum │ Min │ Max │ Avg │ Count │ Unique │
+├─────┼─────┼─────┼─────┼───────┼────────┤
+│   4 │   4 │   4 │   4 │     4 │      4 │
+│   8 │   8 │   8 │   8 │     8 │      8 │
+│   2 │   2 │   2 │   2 │     2 │      2 │
+│   6 │   6 │   6 │   6 │     6 │      6 │
+│   4 │   4 │   4 │   4 │     4 │      4 │
+├─────┼─────┼─────┼─────┼───────┼────────┤
+│  24 │   2 │   8 │   5 │     5 │      4 │
+╰─────┴─────┴─────┴─────┴───────┴────────╯
+```
 
 **What to look for**
 
@@ -527,6 +618,9 @@ type, so the aggregations can be compared directly against a single set of input
 ---
 
 ## 2-H — Every summary over a float column
+
+<!-- screenshot:2-H -->
+
 **What it demonstrates.** The same six-way comparison against `load_avg`, showing how the
 float datatype changes the presentation of the results.
 
@@ -584,9 +678,19 @@ float datatype changes the presentation of the results.
 
 **Output**
 
-
-
-![2-H output](images/2-H.svg)
+```text
+╭───────┬──────┬──────┬──────┬───────┬────────╮
+│   Sum │  Min │  Max │  Avg │ Count │ Unique │
+├───────┼──────┼──────┼──────┼───────┼────────┤
+│  2.45 │ 2.45 │ 2.45 │ 2.45 │  2.45 │   2.45 │
+│  5.12 │ 5.12 │ 5.12 │ 5.12 │  5.12 │   5.12 │
+│  0.85 │ 0.85 │ 0.85 │ 0.85 │  0.85 │   0.85 │
+│  3.21 │ 3.21 │ 3.21 │ 3.21 │  3.21 │   3.21 │
+│  1.50 │ 1.50 │ 1.50 │ 1.50 │  1.50 │   1.50 │
+├───────┼──────┼──────┼──────┼───────┼────────┤
+│ 13.13 │ 0.85 │ 5.12 │ 2.63 │     5 │      5 │
+╰───────┴──────┴──────┴──────┴───────┴────────╯
+```
 
 **What to look for**
 
@@ -603,6 +707,9 @@ float datatype changes the presentation of the results.
 ---
 
 ## 2-I — Counting blanks and non-blanks
+
+<!-- screenshot:2-I -->
+
 **What it demonstrates.** `blanks` and `nonblanks`, the two summaries that count what the
 reader *sees* rather than what the data contains.
 
@@ -646,9 +753,19 @@ reader *sees* rather than what the data contains.
 
 **Output**
 
-
-
-![2-I output](images/2-I.svg)
+```text
+╭──────────┬────────────┬─────────────┬──────────╮
+│ Test Int │ Test Float │ Test String │ Status   │
+├──────────┼────────────┼─────────────┼──────────┤
+│      100 │       1.23 │ hello       │ Running  │
+│          │            │             │ Running  │
+│          │            │             │ Starting │
+│      200 │       4.56 │ world       │ Running  │
+│          │            │             │ Idle     │
+├──────────┼────────────┼─────────────┼──────────┤
+│        3 │          2 │ 3           │ 5        │
+╰──────────┴────────────┴─────────────┴──────────╯
+```
 
 **What to look for**
 
@@ -667,6 +784,9 @@ reader *sees* rather than what the data contains.
 ---
 
 ## 2-J — Annotated rows are excluded from summaries
+
+<!-- screenshot:2-J -->
+
 **What it demonstrates.** `"annotate": true`, which lets a row appear in the body while
 being ignored by every aggregation — combined with a hidden `break` column to set the
 annotation apart visually.
@@ -756,9 +876,21 @@ annotation apart visually.
 
 **Output**
 
-
-
-![2-J output](images/2-J.svg)
+```text
+╭─────┬───────────────┬───────────╮
+│  ID │ Server Name   │ CPU Cores │
+├─────┼───────────────┼───────────┤
+│   1 │ web-server-01 │         4 │
+│   2 │ db-server-01  │         8 │
+│   3 │ cache-server  │         2 │
+│   4 │ api-gateway   │         6 │
+│   5 │ backup-server │         4 │
+├─────┼───────────────┼───────────┤
+│ 999 │ Lines of Code │     1,000 │
+├─────┼───────────────┼───────────┤
+│  15 │ 5             │        24 │
+╰─────┴───────────────┴───────────╯
+```
 
 **What to look for**
 

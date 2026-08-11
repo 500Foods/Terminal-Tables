@@ -91,6 +91,9 @@ Used by 6-L.
 ---
 
 ## 6-A — Short title, no position
+
+<!-- screenshot:6-A -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_A_layout.json`, column set α
 
 ```json
@@ -99,9 +102,18 @@ Used by 6-L.
 
 **Output**
 
-
-
-![6-A output](images/6-A.svg)
+```text
+╭───────────────╮
+│ Server Report │
+├────┬──────────┴────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────────────┴───────────┴──────────╯
+```
 
 **What to look for**
 
@@ -114,6 +126,9 @@ Used by 6-L.
 ---
 
 ## 6-B — Title exactly as wide as the table
+
+<!-- screenshot:6-B -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_B_layout.json`, column set β
 
 ```json
@@ -122,9 +137,18 @@ Used by 6-L.
 
 **Output**
 
-
-
-![6-B output](images/6-B.svg)
+```text
+╭───────────────────────────────────────────╮
+│ Server Performance Metrics Report Data 23 │
+├─────┬───────────────┬──────────┬──────────┤
+│  ID │ Server Name   │ PU Cores │ Load Avg │
+├─────┼───────────────┼──────────┼──────────┤
+│   1 │ web-server-01 │        4 │     2.45 │
+│   2 │ db-server-01  │        8 │     5.12 │
+│   3 │ cache-server  │        2 │     0.85 │
+│   4 │ api-gateway   │        6 │     3.21 │
+╰─────┴───────────────┴──────────┴──────────╯
+```
 
 **What to look for**
 
@@ -141,6 +165,9 @@ Used by 6-L.
 ---
 
 ## 6-C — An over-wide title with no position
+
+<!-- screenshot:6-C -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_C_layout.json`, column set γ with long
 headers
 
@@ -150,9 +177,18 @@ headers
 
 **Output**
 
-
-
-![6-C output](images/6-C.svg)
+```text
+╭──────────────────────────────────────────────────────────────────╮
+│ Detailed Server Performance and Configuration Report for Q2 2023 │
+├───┬──────────┬─────┬─────┬───────────────────────────────────────╯
+│ r │ Server N │ unt │ lue │
+├───┼──────────┼─────┼─────┤
+│ 1 │ web-serv │   4 │ .45 │
+│ 2 │ db-serve │   8 │ .12 │
+│ 3 │ cache-se │   2 │ .85 │
+│ 4 │ api-gate │   6 │ .21 │
+╰───┴──────────┴─────┴─────╯
+```
 
 **What to look for**
 
@@ -172,6 +208,9 @@ headers
 ---
 
 ## 6-D — Short title, `left`
+
+<!-- screenshot:6-D -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_D_layout.json`, column set α
 
 ```json
@@ -182,9 +221,18 @@ headers
 
 **Output**
 
-
-
-![6-D output](images/6-D.svg)
+```text
+╭───────────────╮
+│ Server Report │
+├────┬──────────┴────┬───────────┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────────────┴───────────┴──────────╯
+```
 
 **What to look for**
 
@@ -196,6 +244,9 @@ headers
 ---
 
 ## 6-E — Equal-width title, `left`
+
+<!-- screenshot:6-E -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_E_layout.json`, column set β
 
 ```json
@@ -206,9 +257,18 @@ headers
 
 **Output**
 
-
-
-![6-E output](images/6-E.svg)
+```text
+╭───────────────────────────────────────────╮
+│ Server Performance Metrics Report Data 23 │
+├─────┬───────────────┬──────────┬──────────┤
+│  ID │ Server Name   │ PU Cores │ Load Avg │
+├─────┼───────────────┼──────────┼──────────┤
+│   1 │ web-server-01 │        4 │     2.45 │
+│   2 │ db-server-01  │        8 │     5.12 │
+│   3 │ cache-server  │        2 │     0.85 │
+│   4 │ api-gateway   │        6 │     3.21 │
+╰─────┴───────────────┴──────────┴──────────╯
+```
 
 **What to look for**
 
@@ -218,6 +278,9 @@ headers
 ---
 
 ## 6-F — Over-wide title, `left`
+
+<!-- screenshot:6-F -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_F_layout.json`, column set γ
 
 ```json
@@ -228,9 +291,18 @@ headers
 
 **Output**
 
-
-
-![6-F output](images/6-F.svg)
+```text
+╭──────────────────────────╮
+│ Detailed Server Performa │
+├───┬──────────┬─────┬─────┤
+│ D │ Server N │ res │ Avg │
+├───┼──────────┼─────┼─────┤
+│ 1 │ web-serv │   4 │ .45 │
+│ 2 │ db-serve │   8 │ .12 │
+│ 3 │ cache-se │   2 │ .85 │
+│ 4 │ api-gate │   6 │ .21 │
+╰───┴──────────┴─────┴─────╯
+```
 
 **What to look for**
 
@@ -243,6 +315,9 @@ headers
 ---
 
 ## 6-G — Short title, `center`
+
+<!-- screenshot:6-G -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_G_layout.json`, column set α
 
 ```json
@@ -252,9 +327,18 @@ headers
 
 **Output**
 
-
-
-![6-G output](images/6-G.svg)
+```text
+              ╭───────────────╮
+              │ Server Report │
+╭────┬────────┴──────┬────────┴──┬──────────╮
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────────────┴───────────┴──────────╯
+```
 
 **What to look for**
 
@@ -268,6 +352,9 @@ headers
 ---
 
 ## 6-H — Equal-width title, `center`
+
+<!-- screenshot:6-H -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_H_layout.json`, column set β
 
 ```json
@@ -277,9 +364,18 @@ headers
 
 **Output**
 
-
-
-![6-H output](images/6-H.svg)
+```text
+╭───────────────────────────────────────────╮
+│ Server Performance Metrics Report Data 23 │
+├─────┬───────────────┬──────────┬──────────┤
+│  ID │ Server Name   │ PU Cores │ Load Avg │
+├─────┼───────────────┼──────────┼──────────┤
+│   1 │ web-server-01 │        4 │     2.45 │
+│   2 │ db-server-01  │        8 │     5.12 │
+│   3 │ cache-server  │        2 │     0.85 │
+│   4 │ api-gateway   │        6 │     3.21 │
+╰─────┴───────────────┴──────────┴──────────╯
+```
 
 **What to look for**
 
@@ -288,6 +384,9 @@ headers
 ---
 
 ## 6-I — Over-wide title, `center`
+
+<!-- screenshot:6-I -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_I_layout.json`, column set γ
 
 ```json
@@ -297,9 +396,18 @@ headers
 
 **Output**
 
-
-
-![6-I output](images/6-I.svg)
+```text
+╭──────────────────────────╮
+│ Detailed Server Performa │
+├───┬──────────┬─────┬─────┤
+│ D │ Server N │ res │ Avg │
+├───┼──────────┼─────┼─────┤
+│ 1 │ web-serv │   4 │ .45 │
+│ 2 │ db-serve │   8 │ .12 │
+│ 3 │ cache-se │   2 │ .85 │
+│ 4 │ api-gate │   6 │ .21 │
+╰───┴──────────┴─────┴─────╯
+```
 
 **What to look for**
 
@@ -313,6 +421,9 @@ headers
 ---
 
 ## 6-J — Short title, `right`
+
+<!-- screenshot:6-J -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_J_layout.json`, column set α
 
 ```json
@@ -323,9 +434,18 @@ headers
 
 **Output**
 
-
-
-![6-J output](images/6-J.svg)
+```text
+                     ╭──────────────────────╮
+                     │ Server Report FY2025 │
+╭────┬───────────────┼───────────┬──────────┤
+│ ID │ Server Name   │ CPU Cores │ Load Avg │
+├────┼───────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │         4 │     2.45 │
+│  2 │ db-server-01  │         8 │     5.12 │
+│  3 │ cache-server  │         2 │     0.85 │
+│  4 │ api-gateway   │         6 │     3.21 │
+╰────┴───────────────┴───────────┴──────────╯
+```
 
 **What to look for**
 
@@ -341,6 +461,9 @@ headers
 ---
 
 ## 6-K — Equal-width title, `right`
+
+<!-- screenshot:6-K -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_K_layout.json`, column set β
 
 ```json
@@ -351,9 +474,18 @@ headers
 
 **Output**
 
-
-
-![6-K output](images/6-K.svg)
+```text
+╭───────────────────────────────────────────╮
+│ Server Performance Metrics Report Data 23 │
+├─────┬───────────────┬──────────┬──────────┤
+│  ID │ Server Name   │ PU Cores │ Load Avg │
+├─────┼───────────────┼──────────┼──────────┤
+│   1 │ web-server-01 │        4 │     2.45 │
+│   2 │ db-server-01  │        8 │     5.12 │
+│   3 │ cache-server  │        2 │     0.85 │
+│   4 │ api-gateway   │        6 │     3.21 │
+╰─────┴───────────────┴──────────┴──────────╯
+```
 
 **What to look for**
 
@@ -364,6 +496,9 @@ headers
 ---
 
 ## 6-L — Over-wide title, `right`, with an auto-width column
+
+<!-- screenshot:6-L -->
+
 **Layout delta** — `tests/scenarios/suite_06/test_6_L_layout.json`, column set δ
 
 ```json
@@ -374,9 +509,18 @@ headers
 
 **Output**
 
-
-
-![6-L output](images/6-L.svg)
+```text
+╭───────────────────────────────╮
+│ Detailed Server Performance a │
+├───┬──────────┬─────┬──────────┤
+│ D │ Server N │ res │ Load Avg │
+├───┼──────────┼─────┼──────────┤
+│ 1 │ web-serv │   4 │     2.45 │
+│ 2 │ db-serve │   8 │     5.12 │
+│ 3 │ cache-se │   2 │     0.85 │
+│ 4 │ api-gate │   6 │     3.21 │
+╰───┴──────────┴─────┴──────────╯
+```
 
 **What to look for**
 
