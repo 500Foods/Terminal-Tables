@@ -23,7 +23,7 @@ Looking for copy-pasteable layouts and rendered output? See [EXAMPLES.md](EXAMPL
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2026-08-11 01:22:33 UTC
+Last updated at 2026-08-11 01:23:25 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
