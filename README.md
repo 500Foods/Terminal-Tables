@@ -12,7 +12,7 @@ While this project is currently under active development, feel free to give it a
 ## Recommended Fonts
 Font choice has a significant impact on how well terminal tables render. Choosing the right font ensures that border characters connect properly and the table grid appears clean and pixel-perfect. Highly recommended: [Iosevka](https://github.com/be5invis/Iosevka) — a versatile, open-source typeface with exceptional terminal rendering. Its carefully designed box-drawing characters produce properly connected, crisp lines with no gaps or misalignments, making it ideal for displaying dense tabular data in the terminal.
 
-<img width="500" alt="performance screenshot" src="images/performance_screenshot.png" />
+<img width="800" alt="performance screenshot" src="images/performance_screenshot.png" />
 
 *Example screenshot taken from a Visual Studio Code Terminal session using a customized Iosevka font*
 
