@@ -94,6 +94,9 @@ pushes `┬` junctions down into the bottom border.
 ---
 
 ## 7-A — A centred footer under a summary row
+
+<!-- screenshot:7-A -->
+
 **What it demonstrates.** The everyday case: a short attribution line centred beneath a
 table that already ends in a summary.
 
@@ -139,7 +142,381 @@ table that already ends in a summary.
 
 **Output**
 
-![7-E output](images/7-E.svg)
+```text
+╭────┬───────────────┬──────────┬───────────╮
+│ ID │ Server Name   │ Category │ CPU Cores │
+├────┼───────────────┼──────────┼───────────┤
+│  1 │ web-server-01 │   Web    │         4 │
+│  2 │ db-server-01  │ Database │         8 │
+│  3 │ cache-server  │  Cache   │         2 │
+│  4 │ api-gateway   │   Web    │         6 │
+├────┼───────────────┼──────────┼───────────┤
+│  4 │ 4             │    3     │        20 │
+╰────┴───┬───────────┴──────────┴─┬─────────╯
+         │ Server Overview Report │
+         ╰────────────────────────╯
+```
+
+**What to look for**
+
+* The bottom border reads `╰────┴───┬───────────┴──────────┴─┬─────────╯`. Three characters
+  are doing three different jobs there: `╰` closes the table, `┴` closes a column
+  separator, and `┬` opens the wall of the footer box hanging below.
+* The 26-character box is centred under a 45-character table, inset nine characters — the
+  exact mirror of [5-A](EXAMPLES_05.md#5-a--a-centred-title-narrower-than-the-table).
+* The summary row and the footer are separate features. The summary is part of the table;
+  the footer is a box attached to it. Neither is aware of the other.
+
+---
+
+## 7-B — A footer wider than the table
+
+<!-- screenshot:7-B -->
+
+**What it demonstrates.** Omitting `footer_position` so a long footer may overhang instead
+of being truncated.
+
+**Layout** — `tests/scenarios/suite_07/test_7_B_layout.json`
+
+```json
+{
+  "theme": "Blue",
+  "footer": "Detailed Server Performance and Configuration Analysis Report for Q2 2023",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "left",
+      "width": 30,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}
+```
+
+**Output**
+
+```text
+╭────┬───────────────┬──────────────────────────────┬──────────╮
+│ ID │ Server Name   │ Description                  │ Load Avg │
+├────┼───────────────┼──────────────────────────────┼──────────┤
+│  1 │ web-server-01 │ Primary web server for       │     2.45 │
+│    │               │ frontend applications with a │          │
+│    │               │ detailed setup.              │          │
+│  2 │ db-server-01  │ Main database server         │     5.12 │
+│    │               │ handling critical data       │          │
+│    │               │ operations.                  │          │
+│  3 │ cache-server  │ In-memory cache for speeding │     0.85 │
+│    │               │ up data access.              │          │
+│  4 │ api-gateway   │ API gateway managing         │     3.21 │
+│    │               │ incoming requests and        │          │
+│    │               │ routing.                     │          │
+├────┼───────────────┼──────────────────────────────┼──────────┤
+│    │               │                              │     2.91 │
+├────┴───────────────┴──────────────────────────────┴──────────┴────────────╮
+│ Detailed Server Performance and Configuration Analysis Report for Q2 2023 │
+╰───────────────────────────────────────────────────────────────────────────╯
+```
+
+**What to look for**
+
+* A 77-character box under a 64-character table, with the full 73-character footer intact.
+* The bottom border now begins with `├` rather than `╰`: the table's bottom-left corner is
+  not a corner any more, because the footer box continues below and to the right of it.
+* This layout is [5-B](EXAMPLES_05.md#5-b--a-title-wider-than-the-table) with the title
+  moved to the bottom. Compare the two captures — the frames are reflections of each other.
+
+---
+
+## 7-C — A centred footer under a tall table
+
+<!-- screenshot:7-C -->
+
+**What it demonstrates.** A footer beneath a body made tall by delimiter wrapping.
+
+**Layout** — `tests/scenarios/suite_07/test_7_C_layout.json`
+
+```json
+{
+  "theme": "Red",
+  "footer": "Comprehensive Resource Utilization Dashboard",
+  "footer_position": "center",
+  "columns": [
+    {
+      "header": "Server",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "CPU Usage",
+      "key": "cpu_usage",
+      "datatype": "kcpu",
+      "justification": "right",
+      "summary": "max"
+    },
+    {
+      "header": "Tags",
+      "key": "tags",
+      "datatype": "text",
+      "justification": "center",
+      "width": 20,
+      "wrap_mode": "wrap",
+      "wrap_char": ","
+    }
+  ]
+}
+```
+
+**Output**
+
+```text
+╭───────────────┬───────────┬──────────┬───────────┬────────────────────╮
+│ Server        │ CPU Cores │ Load Avg │ CPU Usage │        Tags        │
+├───────────────┼───────────┼──────────┼───────────┼────────────────────┤
+│ web-server-01 │         4 │     2.45 │    1,250m │      frontend      │
+│               │           │          │           │        app         │
+│               │           │          │           │         ui         │
+│               │           │          │           │      primary       │
+│               │           │          │           │    loadbalancer    │
+│ db-server-01  │         8 │     5.12 │    3,200m │         db         │
+│               │           │          │           │        sql         │
+│               │           │          │           │      storage       │
+│               │           │          │           │      primary       │
+│               │           │          │           │      backend       │
+│ cache-server  │         2 │     0.85 │      500m │       cache        │
+│               │           │          │           │       redis        │
+│               │           │          │           │        fast        │
+│               │           │          │           │       memory       │
+│ api-gateway   │         6 │     3.21 │    2,100m │        api         │
+│               │           │          │           │      gateway       │
+│               │           │          │           │      routing       │
+│               │           │          │           │        web         │
+│               │           │          │           │     interface      │
+├───────────────┼───────────┼──────────┼───────────┼────────────────────┤
+│ 4             │        20 │     2.91 │    3,200m │                    │
+╰───────────┬───┴───────────┴──────────┴───────────┴───────┬────────────╯
+            │ Comprehensive Resource Utilization Dashboard │
+            ╰──────────────────────────────────────────────╯
+```
+
+**What to look for**
+
+* A 48-character box centred under a 73-character table. The twenty lines of wrapped tags
+  above it are irrelevant to the calculation — only the table's *width* matters.
+* Footers are especially useful on tall tables, where the reader reaches the bottom having
+  scrolled the header off screen. A footer restating the source or the timestamp is often
+  more valuable than the title.
+* `CPU Usage` reports `max` (`3,200m`) rather than a total, as in
+  [5-C](EXAMPLES_05.md#5-c--a-centred-title-over-a-wrapped-column).
+
+---
+
+## 7-D — Right-aligned footer under a grouped table
+
+<!-- screenshot:7-D -->
+
+**What it demonstrates.** `"footer_position": "right"` beneath a table separated into
+groups by a `break` column.
+
+**Layout** — `tests/scenarios/suite_07/test_7_D_layout.json`
+
+```json
+{
+  "theme": "Blue",
+  "footer": "Server Inventory by Category",
+  "footer_position": "right",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "left",
+      "break": true,
+      "summary": "unique"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left"
+    },
+    {
+      "header": "Status",
+      "key": "status",
+      "datatype": "text",
+      "justification": "center"
+    },
+    {
+      "header": "Memory Usage",
+      "key": "memory_usage",
+      "datatype": "kmem",
+      "justification": "right",
+      "summary": "sum"
+    }
+  ]
+}
+```
+
+**Output**
+
+```text
+╭────┬──────────┬───────────────┬──────────┬──────────────╮
+│ ID │ Category │ Server Name   │  Status  │ Memory Usage │
+├────┼──────────┼───────────────┼──────────┼──────────────┤
+│  1 │ Web      │ web-server-01 │ Running  │       2,048M │
+├────┼──────────┼───────────────┼──────────┼──────────────┤
+│  2 │ Database │ db-server-01  │ Running  │       8,192M │
+├────┼──────────┼───────────────┼──────────┼──────────────┤
+│  3 │ Cache    │ cache-server  │ Starting │       1,024M │
+├────┼──────────┼───────────────┼──────────┼──────────────┤
+│  4 │ Web      │ api-gateway   │ Running  │       4,096M │
+├────┼──────────┼───────────────┼──────────┼──────────────┤
+│  4 │ 3        │               │          │      15,360M │
+╰────┴──────────┴──────────┬────┴──────────┴──────────────┤
+                           │ Server Inventory by Category │
+                           ╰──────────────────────────────╯
+```
+
+**What to look for**
+
+* The 32-character box is flush with the right edge of the 59-character table, so the
+  bottom border closes with `┤` and only the box's left wall produces a junction.
+* Right-aligned footers read as attributions or timestamps — the terminal equivalent of a
+  signature block. Left-aligned ones read as captions.
+* Every row is separated because all four categories differ, and `Category` still reports
+  `unique` 3 in the summary. Breaks, summaries and footers stack without interference.
+
+---
+
+## 7-E — A full-width footer that overflows
+
+<!-- screenshot:7-E -->
+
+**What it demonstrates.** `"footer_position": "full"` with text longer than the table can
+hold.
+
+**Layout** — `tests/scenarios/suite_07/test_7_E_layout.json`
+
+```json
+{
+  "theme": "Red",
+  "footer": "Enterprise Server Management System - Detailed Analytics and Performance Metrics for Strategic Planning",
+  "footer_position": "full",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "min"
+    },
+    {
+      "header": "Server Name",
+      "key": "server_name",
+      "datatype": "text",
+      "justification": "left",
+      "summary": "count"
+    },
+    {
+      "header": "Category",
+      "key": "category",
+      "datatype": "text",
+      "justification": "center",
+      "summary": "unique"
+    },
+    {
+      "header": "Description",
+      "key": "description",
+      "datatype": "text",
+      "justification": "right",
+      "width": 25,
+      "wrap_mode": "wrap"
+    },
+    {
+      "header": "CPU Cores",
+      "key": "cpu_cores",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "avg"
+    },
+    {
+      "header": "Load Avg",
+      "key": "load_avg",
+      "datatype": "float",
+      "justification": "center",
+      "summary": "max"
+    }
+  ]
+}
+```
+
+**Output**
+
+```text
+╭────┬───────────────┬──────────┬─────────────────────────┬───────────┬──────────╮
+│ ID │ Server Name   │ Category │             Description │ CPU Cores │ Load Avg │
+├────┼───────────────┼──────────┼─────────────────────────┼───────────┼──────────┤
+│  1 │ web-server-01 │   Web    │  Primary web server for │         4 │   2.45   │
+│    │               │          │   frontend applications │           │          │
+│    │               │          │  with a detailed setup. │           │          │
+│  2 │ db-server-01  │ Database │    Main database server │         8 │   5.12   │
+│    │               │          │  handling critical data │           │          │
+│    │               │          │             operations. │           │          │
+│  3 │ cache-server  │  Cache   │     In-memory cache for │         2 │   0.85   │
+│    │               │          │        speeding up data │           │          │
+│    │               │          │                 access. │           │          │
+│  4 │ api-gateway   │   Web    │    API gateway managing │         6 │   3.21   │
+│    │               │          │   incoming requests and │           │          │
+│    │               │          │                routing. │           │          │
+├────┼───────────────┼──────────┼─────────────────────────┼───────────┼──────────┤
+│  1 │ 4             │    3     │                         │         5 │   5.12   │
+├────┴───────────────┴──────────┴─────────────────────────┴───────────┴──────────┤
+│ Enterprise Server Management System - Detailed Analytics and Performance Metri │
+╰────────────────────────────────────────────────────────────────────────────────╯
+```
 
 **What to look for**
 
