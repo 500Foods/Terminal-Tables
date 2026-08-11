@@ -4,12 +4,11 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-C_BIN="$PROJECT_ROOT/tables.c/tables"
-SH_SCRIPT="$PROJECT_ROOT/tables.sh/tables.sh"
 SCENARIOS_DIR="$SCRIPT_DIR/scenarios"
 MANIFEST="$SCENARIOS_DIR/manifest.json"
 PERF_DATA_JSON="$SCRIPT_DIR/performance_data.json"
 PERF_LAYOUT_JSON="$SCRIPT_DIR/performance_layout.json"
+IMPLEMENTATIONS_JSON="$SCRIPT_DIR/implementations.json"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -29,26 +28,137 @@ if [[ "${1:-}" == "--job-worker" ]]; then
     JOB_TMPDIR="$4"
 fi
 
+# =============================================================================
+# Implementation registry
+# -----------------------------------------------------------------------------
+# Every language/binary under test is described once in implementations.json
+# (id, display name, run command template, lint tool, loc path) instead of
+# being hard-coded here. Adding a new language later — Python, Lua, Rust,
+# Go, ... — is just a new entry in that file; nothing below needs to change.
+# One of the entries must be marked "reference": true (currently Bash, per
+# AGENTS.md: it is the oracle every other implementation is compared
+# against). See tests/README.md for the full schema.
+# =============================================================================
+
+declare -a IMPL_ID IMPL_NAME IMPL_REFERENCE IMPL_RUN_TOKENS IMPL_TIMEOUT
+declare -a IMPL_LINT_NAME IMPL_LINT_TOKENS IMPL_LOC_PATH IMPL_LOC_LANGS
+REFERENCE_IDX=-1
+
+# First run token, with {PROJECT_ROOT} expanded, decides how an
+# implementation's availability is probed: an absolute path must be an
+# executable file; a bare command name is looked up on PATH.
+impl_available() {
+    local tokens_joined="$1"
+    local first="${tokens_joined%%$'\x1f'*}"
+    first="${first//\{PROJECT_ROOT\}/$PROJECT_ROOT}"
+    if [[ "${first}" == /* ]]; then
+        [[ -x "${first}" ]]
+    else
+        command -v "${first}" >/dev/null 2>&1
+    fi
+}
+
+# Expand a joined (unit-separator delimited) token list into CMD_ARR,
+# substituting {PROJECT_ROOT}/{LAYOUT}/{DATA} and optionally appending
+# --mono. Pure bash (no forks) since tokens are pre-split once at load time.
+CMD_ARR=()
+expand_cmd() {
+    local tokens_joined="$1" layout="$2" data="$3" mono="$4"
+    CMD_ARR=()
+    if [[ -n "${tokens_joined}" ]]; then
+        local -a raw=()
+        IFS=$'\x1f' read -ra raw <<< "${tokens_joined}"
+        local tok
+        for tok in "${raw[@]}"; do
+            tok="${tok//\{PROJECT_ROOT\}/$PROJECT_ROOT}"
+            tok="${tok//\{LAYOUT\}/$layout}"
+            tok="${tok//\{DATA\}/$data}"
+            CMD_ARR+=("${tok}")
+        done
+    fi
+    [[ "${mono}" == "1" ]] && CMD_ARR+=("--mono")
+}
+
+# Single jq invocation for the whole registry (one @tsv line per
+# implementation, with array fields join(0x1f)-encoded) instead of one jq
+# fork per field per implementation.
+load_implementations() {
+    if [[ ! -f "${IMPLEMENTATIONS_JSON}" ]]; then
+        echo "ERROR: implementations config not found at ${IMPLEMENTATIONS_JSON}" >&2
+        exit 1
+    fi
+
+    local -a lines=()
+    mapfile -t lines < <(jq -r '
+        .[] | [
+            .id,
+            .name,
+            ((.reference // false) | tostring),
+            (.run | join("\u001f")),
+            ((.timeout // 30) | tostring),
+            (.lint.name // ""),
+            ((.lint.cmd // []) | join("\u001f")),
+            (.loc.path // ""),
+            (.loc.cloc_langs // "")
+        ] | @tsv
+    ' "${IMPLEMENTATIONS_JSON}")
+
+    local idx=0 line
+    for line in "${lines[@]}"; do
+        local -a f=()
+        mapfile -t -d $'\t' f <<< "${line}"
+        f[8]="${f[8]%$'\n'}"
+
+        if ! impl_available "${f[3]}"; then
+            echo -e "${YELLOW}Warning: implementation '${f[1]}' unavailable, skipping${NC}" >&2
+            continue
+        fi
+
+        IMPL_ID[idx]="${f[0]}"
+        IMPL_NAME[idx]="${f[1]}"
+        IMPL_REFERENCE[idx]="${f[2]}"
+        IMPL_RUN_TOKENS[idx]="${f[3]}"
+        IMPL_TIMEOUT[idx]="${f[4]}"
+        IMPL_LINT_NAME[idx]="${f[5]}"
+        IMPL_LINT_TOKENS[idx]="${f[6]}"
+        IMPL_LOC_PATH[idx]="${f[7]}"
+        IMPL_LOC_LANGS[idx]="${f[8]}"
+        [[ "${IMPL_REFERENCE[idx]}" == "true" ]] && REFERENCE_IDX=${idx}
+        idx=$((idx + 1))
+    done
+
+    if [[ ${REFERENCE_IDX} -lt 0 ]]; then
+        echo "ERROR: no available implementation is marked \"reference\": true in ${IMPLEMENTATIONS_JSON}" >&2
+        exit 1
+    fi
+}
+
+load_implementations
+IMPL_COUNT=${#IMPL_ID[@]}
+
 show_saved_results() {
-    if [[ ! -f "$PERF_LAYOUT_JSON" || ! -f "$PERF_DATA_JSON" ]]; then
+    if [[ ! -f "${PERF_LAYOUT_JSON}" || ! -f "${PERF_DATA_JSON}" ]]; then
         echo "No saved performance results found."
         echo "Run tests first (e.g. bash tests/run_tests.sh 01), then:"
         echo "  bash tests/run_tests.sh --results"
         exit 1
     fi
-    if [[ ! -x "$C_BIN" ]]; then
-        echo "ERROR: C binary not found or not executable at $C_BIN"
-        exit 1
-    fi
-    "$C_BIN" "$PERF_LAYOUT_JSON" "$PERF_DATA_JSON"
-    exit 0
+    expand_cmd "${IMPL_RUN_TOKENS[${REFERENCE_IDX}]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
+    # Render with any available implementation; the reference is guaranteed present.
+    local i
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
+        "${CMD_ARR[@]}" && exit 0
+    done
+    echo "ERROR: no available implementation to render results" >&2
+    exit 1
 }
 
 # Parse flags; remaining args are suite filters
 SUITES=()
-if [[ -z "$JOB_WORKER_MODE" ]]; then
+if [[ -z "${JOB_WORKER_MODE}" ]]; then
     for arg in "$@"; do
-        case "$arg" in
+        case "${arg}" in
             --results|-r)
                 show_saved_results
                 ;;
@@ -57,6 +167,11 @@ if [[ -z "$JOB_WORKER_MODE" ]]; then
 Usage: run_tests.sh [OPTIONS] [SUITE ...]
 
   Run comparison tests for the given suites (default: 00–09).
+
+  Implementations under test are defined in tests/implementations.json
+  (id, display name, run command, lint tool, lines-of-code path). Add a
+  new language by adding an entry there; this script does not hard-code
+  any particular language.
 
 Options:
   --results, -r   Re-display the performance table from the last run
@@ -70,11 +185,11 @@ USAGE
                 exit 0
                 ;;
             -*)
-                echo "Unknown option: $arg (try --help)"
+                echo "Unknown option: ${arg} (try --help)"
                 exit 1
                 ;;
             *)
-                SUITES+=("$arg")
+                SUITES+=("${arg}")
                 ;;
         esac
     done
@@ -84,16 +199,16 @@ pass_count=0
 fail_count=0
 total_count=0
 
-if [[ -z "$JOB_WORKER_MODE" ]]; then
+if [[ -z "${JOB_WORKER_MODE}" ]]; then
     RUN_ID="$$_${RANDOM}${RANDOM}"
     TEST_TMPDIR=$(mktemp -d)
     PERF_FILE="$TEST_TMPDIR/perf.tsv"
     export PERF_FILE
-    touch "$PERF_FILE"
+    touch "${PERF_FILE}"
     SUITE_NAMES_FILE="$TEST_TMPDIR/suite_names.tsv"
-    touch "$SUITE_NAMES_FILE"
+    touch "${SUITE_NAMES_FILE}"
 
-    cleanup() { rm -rf "$TEST_TMPDIR"; }
+    cleanup() { rm -rf "${TEST_TMPDIR}"; }
     trap cleanup EXIT
 fi
 
@@ -138,22 +253,46 @@ format_ms() {
     echo "$(format_int "$ms") ms"
 }
 
-# cloc code-line counts: Bash = tables.sh; C = tables.c sources + headers
-# CSV columns: files,language,blank,comment,code  (SUM row has language=SUM)
-count_loc() {
-    local bash_loc=0 c_loc=0
-    if command -v cloc >/dev/null 2>&1; then
-        bash_loc=$(cloc --csv --quiet "$PROJECT_ROOT/tables.sh" 2>/dev/null | awk -F, '$2=="SUM"{print $5; exit}')
-        c_loc=$(cloc --csv --quiet --include-lang=C,"C/C++ Header" "$PROJECT_ROOT/tables.c" 2>/dev/null | awk -F, '$2=="SUM"{print $5; exit}')
-        bash_loc=${bash_loc:-0}
-        c_loc=${c_loc:-0}
+# "N.Nx" spread between the largest and smallest of a list of integers
+# (used for the performance table's Spread column and the LOC row). Scales
+# to any number of implementations, unlike a fixed "A / B" ratio.
+ratio_spread() {
+    local -a vals=("$@")
+    [[ ${#vals[@]} -eq 0 ]] && { echo "—"; return; }
+    local min="${vals[0]}" max="${vals[0]}" v
+    for v in "${vals[@]}"; do
+        [[ $v -lt $min ]] && min=$v
+        [[ $v -gt $max ]] && max=$v
+    done
+    if [[ ${min} -gt 0 ]]; then
+        awk "BEGIN {printf \"%.1f x\", $max / $min}"
+    else
+        echo "—"
     fi
-    echo "$bash_loc" "$c_loc"
 }
 
-# Color language timings: lowest = {GREEN}, highest = {RED}.
-# Takes a list of integer ms values; prints one colored "N ms" string per input
-# on its own line. Equal values share the same color (green if all equal).
+# cloc code-line count for one implementation's configured loc.path
+# (optionally filtered to loc.cloc_langs). Returns 0 if cloc/path/config
+# is unavailable so the LOC row degrades gracefully.
+count_loc_for_impl() {
+    local idx="$1"
+    local path="${IMPL_LOC_PATH[$idx]}"
+    [[ -z "${path}" ]] && { echo 0; return; }
+    command -v cloc >/dev/null 2>&1 || { echo 0; return; }
+    local langs="${IMPL_LOC_LANGS[$idx]}" loc
+    if [[ -n "${langs}" ]]; then
+        loc=$(cloc --csv --quiet --include-lang="${langs}" "${PROJECT_ROOT}/${path}" 2>/dev/null \
+            | awk -F, '$2=="SUM"{print $5; exit}')
+    else
+        loc=$(cloc --csv --quiet "${PROJECT_ROOT}/${path}" 2>/dev/null \
+            | awk -F, '$2=="SUM"{print $5; exit}')
+    fi
+    echo "${loc:-0}"
+}
+
+# Color a list of ms values: fastest = {GREEN}, slowest = {RED}. Takes any
+# number of values; prints one colored "N ms" string per input on its own
+# line, in input order. Equal values all get green.
 colorize_timings() {
     local -a vals=("$@")
     local n=${#vals[@]}
@@ -177,7 +316,33 @@ colorize_timings() {
         elif [[ $v -eq $max ]]; then
             echo "{RED}${label}{NC}"
         else
-            # Middle values (future languages) stay uncolored
+            # Middle values (3+ implementations) stay uncolored
+            echo "$label"
+        fi
+    done
+}
+
+# Same coloring rule as colorize_timings but for plain integers (LOC counts:
+# fewest = green, most = red) rather than "N ms" labels.
+colorize_counts() {
+    local -a vals=("$@")
+    local n=${#vals[@]}
+    [[ $n -eq 0 ]] && return
+    local min="${vals[0]}" max="${vals[0]}" v
+    for v in "${vals[@]}"; do
+        [[ $v -lt $min ]] && min=$v
+        [[ $v -gt $max ]] && max=$v
+    done
+    for v in "${vals[@]}"; do
+        local label
+        label=$(format_int "$v")
+        if [[ $min -eq $max ]]; then
+            echo "{GREEN}${label}{NC}"
+        elif [[ $v -eq $min ]]; then
+            echo "{GREEN}${label}{NC}"
+        elif [[ $v -eq $max ]]; then
+            echo "{RED}${label}{NC}"
+        else
             echo "$label"
         fi
     done
@@ -185,63 +350,48 @@ colorize_timings() {
 
 run_lint_suite() {
     local issues=0
-    local sh_ms=0
-    local c_ms=0
+    local -a ms=()
+    local i
 
-    echo -n "  shellcheck (tables.sh): "
-    if ! command -v shellcheck >/dev/null 2>&1; then
-        echo -e "${YELLOW}SKIP${NC} (shellcheck not installed)"
-    else
-        local sc_out sc_rc sc_start sc_end
-        sc_rc=0
-        sc_start=$(date +%s%N)
-        sc_out=$(shellcheck "$SH_SCRIPT" 2>&1) || sc_rc=$?
-        sc_end=$(date +%s%N)
-        sh_ms=$(( (sc_end - sc_start) / 1000000 ))
-        if [[ $sc_rc -eq 0 ]]; then
-            echo -e "${GREEN}PASS${NC}  (${sh_ms}ms)"
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        ms[i]=0
+        [[ -z "${IMPL_LINT_NAME[$i]}" ]] && continue
+
+        echo -n "  ${IMPL_LINT_NAME[$i]} (${IMPL_NAME[$i]}): "
+        expand_cmd "${IMPL_LINT_TOKENS[$i]}" "" "" 0
+        local tool="${CMD_ARR[0]:-}"
+        if [[ -z "${tool}" ]] || ! command -v "${tool}" >/dev/null 2>&1; then
+            echo -e "${YELLOW}SKIP${NC} (${tool:-lint tool} not installed)"
+            continue
+        fi
+
+        local out rc start end
+        rc=0
+        start=$(date +%s%N)
+        out=$("${CMD_ARR[@]}" 2>&1) || rc=$?
+        end=$(date +%s%N)
+        ms[i]=$(( (end - start) / 1000000 ))
+
+        if [[ $rc -eq 0 ]]; then
+            echo -e "${GREEN}PASS${NC}  (${ms[$i]}ms)"
         else
-            local sc_count
-            sc_count=$(echo "$sc_out" | grep -c . || true)
-            echo -e "${RED}FAIL${NC}  (${sh_ms}ms, $sc_count issue(s))"
-            echo "$sc_out" | head -20 | sed 's/^/    /'
+            local count
+            count=$(echo "$out" | grep -c . || true)
+            echo -e "${RED}FAIL${NC}  (${ms[$i]}ms, $count issue(s))"
+            echo "$out" | head -20 | sed 's/^/    /'
             issues=$((issues + 1))
         fi
+    done
+
+    # Record lint timings for the performance table, one line per implementation
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        echo -e "00\t${IMPL_ID[$i]}\t${ms[$i]:-0}" >> "${PERF_FILE}"
+    done
+    if ! grep -q $'^00\t' "${SUITE_NAMES_FILE}" 2>/dev/null; then
+        echo -e "00\tLinting" >> "${SUITE_NAMES_FILE}"
     fi
 
-    echo -n "  cppcheck (tables.c): "
-    if ! command -v cppcheck >/dev/null 2>&1; then
-        echo -e "${YELLOW}SKIP${NC} (cppcheck not installed)"
-    else
-        local cc_out cc_rc cc_start cc_end
-        cc_rc=0
-        cc_start=$(date +%s%N)
-        # Defaults only; --error-exitcode so any finding fails the suite
-        cc_out=$(cppcheck --error-exitcode=1 --quiet \
-            "$PROJECT_ROOT/tables.c" 2>&1) || cc_rc=$?
-        cc_end=$(date +%s%N)
-        c_ms=$(( (cc_end - cc_start) / 1000000 ))
-        if [[ $cc_rc -eq 0 ]]; then
-            echo -e "${GREEN}PASS${NC}  (${c_ms}ms)"
-        else
-            local cc_count
-            cc_count=$(echo "$cc_out" | grep -c . || true)
-            echo -e "${RED}FAIL${NC}  (${c_ms}ms, $cc_count issue(s))"
-            echo "$cc_out" | head -20 | sed 's/^/    /'
-            issues=$((issues + 1))
-        fi
-    fi
-
-    # Record lint timings for the performance table (Bash=shellcheck, C=cppcheck)
-    echo -e "00\t${c_ms}\t${sh_ms}" >> "$PERF_FILE"
-    if ! grep -q $'^00\t' "$SUITE_NAMES_FILE" 2>/dev/null; then
-        echo -e "00\tLinting" >> "$SUITE_NAMES_FILE"
-    fi
-
-    if [[ $issues -eq 0 ]]; then
-        return 0
-    fi
-    return 1
+    [[ ${issues} -eq 0 ]]
 }
 
 run_scenario() {
@@ -268,56 +418,69 @@ run_scenario() {
         resolve_file "$layout_file" > "$tmp_layout"
     fi
 
-    # Invoke each implementation's binary/script directly (no intermediate
-    # wrapper script) to avoid an extra bash fork+exec skewing the timing.
-    local c_start c_end c_raw c_out
-    c_start=$(date +%s%N)
-    c_raw=$(timeout 10 "$C_BIN" "$tmp_layout" "$tmp_data" 2>&1) || true
-    c_end=$(date +%s%N)
-    local c_ms=$(( (c_end - c_start) / 1000000 ))
-    c_out=$(normalize_output "$c_raw")
+    # Run every configured implementation directly (no intermediate wrapper
+    # script) so timing reflects the implementation itself, not extra forks.
+    local -a ms=() out_color=() out_mono=()
+    local i
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${tmp_layout}" "${tmp_data}" 0
+        local start end raw
+        start=$(date +%s%N)
+        raw=$(timeout "${IMPL_TIMEOUT[$i]}" "${CMD_ARR[@]}" 2>&1) || true
+        end=$(date +%s%N)
+        ms[i]=$(( (end - start) / 1000000 ))
+        out_color[i]=$(normalize_output "${raw}")
 
-    local sh_start sh_end sh_raw sh_out
-    sh_start=$(date +%s%N)
-    sh_raw=$(timeout 120 bash "$SH_SCRIPT" "$tmp_layout" "$tmp_data" 2>&1) || true
-    sh_end=$(date +%s%N)
-    local sh_ms=$(( (sh_end - sh_start) / 1000000 ))
-    sh_out=$(normalize_output "$sh_raw")
+        # --mono variant: not timed for the performance table, only
+        # validated for correctness against the reference implementation.
+        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${tmp_layout}" "${tmp_data}" 1
+        local mraw
+        mraw=$(timeout "${IMPL_TIMEOUT[$i]}" "${CMD_ARR[@]}" 2>&1) || true
+        out_mono[i]=$(normalize_output "${mraw}")
 
-    # --mono variant: same inputs, both implementations invoked with --mono
-    # appended. Not timed for the performance table; only validated for
-    # correctness.
-    local c_mono_raw c_mono_out
-    c_mono_raw=$(timeout 10 "$C_BIN" "$tmp_layout" "$tmp_data" --mono 2>&1) || true
-    c_mono_out=$(normalize_output "$c_mono_raw")
-
-    local sh_mono_raw sh_mono_out
-    sh_mono_raw=$(timeout 120 bash "$SH_SCRIPT" "$tmp_layout" "$tmp_data" --mono 2>&1) || true
-    sh_mono_out=$(normalize_output "$sh_mono_raw")
+        echo -e "${suite}\t${IMPL_ID[$i]}\t${ms[$i]}" >> "${PERF_FILE}"
+    done
 
     rm -f "$tmp_data" "$tmp_layout"
 
-    echo -e "${suite}\t${c_ms}\t${sh_ms}" >> "$PERF_FILE"
+    # Every non-reference implementation is compared against the reference
+    # (Bash — see AGENTS.md) for both the colored and --mono output.
+    local ref=${REFERENCE_IDX}
+    local -a fail_ids=()
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        [[ $i -eq ${ref} ]] && continue
+        if [[ "${out_color[$i]}" != "${out_color[$ref]}" || "${out_mono[$i]}" != "${out_mono[$ref]}" ]]; then
+            fail_ids+=("$i")
+        fi
+    done
 
-    local color_ok=1 mono_ok=1
-    [[ "$c_out" == "$sh_out" ]] && color_ok=0
-    [[ "$c_mono_out" == "$sh_mono_out" ]] && mono_ok=0
+    local summary=""
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        [[ -n "${summary}" ]] && summary+=", "
+        summary+="${IMPL_NAME[$i]}: ${ms[$i]}ms"
+    done
 
-    if [[ $color_ok -eq 0 && $mono_ok -eq 0 ]]; then
-        echo -e "${GREEN}PASS${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: ${GREEN}PASS${NC}]"
+    if [[ ${#fail_ids[@]} -eq 0 ]]; then
+        echo -e "${GREEN}PASS${NC}  (${summary}) [mono: ${GREEN}PASS${NC}]"
         return 0
     fi
 
-    if [[ $color_ok -ne 0 ]]; then
-        echo -e "${RED}DIFF${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: $([[ $mono_ok -eq 0 ]] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")]"
-        diff <(echo "$c_out") <(echo "$sh_out") | head -20
-    else
-        echo -e "${GREEN}PASS${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: ${RED}FAIL${NC}]"
-    fi
-    if [[ $mono_ok -ne 0 ]]; then
-        echo "  mono diff:"
-        diff <(echo "$c_mono_out") <(echo "$sh_mono_out") | head -20 | sed 's/^/  /'
-    fi
+    local names=""
+    for i in "${fail_ids[@]}"; do
+        [[ -n "${names}" ]] && names+=", "
+        names+="${IMPL_NAME[$i]}"
+    done
+    echo -e "${RED}DIFF${NC}  (${summary}) — diverges from ${IMPL_NAME[$ref]}: ${names}"
+    for i in "${fail_ids[@]}"; do
+        if [[ "${out_color[$i]}" != "${out_color[$ref]}" ]]; then
+            echo "  ${IMPL_NAME[$i]} vs ${IMPL_NAME[$ref]} (color):"
+            diff <(echo "${out_color[$ref]}") <(echo "${out_color[$i]}") | head -20 | sed 's/^/    /'
+        fi
+        if [[ "${out_mono[$i]}" != "${out_mono[$ref]}" ]]; then
+            echo "  ${IMPL_NAME[$i]} vs ${IMPL_NAME[$ref]} (mono):"
+            diff <(echo "${out_mono[$ref]}") <(echo "${out_mono[$i]}") | head -20 | sed 's/^/    /'
+        fi
+    done
     return 1
 }
 
@@ -326,19 +489,19 @@ run_scenario() {
 # job-specific subdirectory of the parent's TEST_TMPDIR, so parallel jobs
 # (and separate concurrent `run_tests.sh` invocations, which each get their
 # own TEST_TMPDIR) never share mutable state.
-if [[ -n "$JOB_WORKER_MODE" ]]; then
-    job_line=$(sed -n "$((JOB_IDX + 1))p" "$JOBS_TSV")
-    IFS=$'\t' read -r suite _label scenario_name <<< "$job_line"
+if [[ -n "${JOB_WORKER_MODE}" ]]; then
+    job_line=$(sed -n "$((JOB_IDX + 1))p" "${JOBS_TSV}")
+    IFS=$'\t' read -r suite _label scenario_name <<< "${job_line}"
 
     job_root="$JOB_TMPDIR/job_${JOB_IDX}"
-    mkdir -p "$job_root"
+    mkdir -p "${job_root}"
     export PERF_FILE="$JOB_TMPDIR/perf.tsv"
 
-    scenario_output=$(run_scenario "$suite" "$scenario_name")
+    scenario_output=$(run_scenario "${suite}" "${scenario_name}")
     rc=$?
-    printf '%s\n' "$scenario_output" > "$JOB_TMPDIR/out_${JOB_IDX}.txt"
-    echo "$rc" > "$JOB_TMPDIR/rc_${JOB_IDX}.txt"
-    rm -rf "$job_root"
+    printf '%s\n' "${scenario_output}" > "$JOB_TMPDIR/out_${JOB_IDX}.txt"
+    echo "${rc}" > "$JOB_TMPDIR/rc_${JOB_IDX}.txt"
+    rm -rf "${job_root}"
     exit 0
 fi
 
@@ -346,13 +509,15 @@ SUITE_START_NS=$(date +%s%N)
 
 echo "=== Terminal Tables Test Suite ==="
 echo ""
+echo "Implementations: $(IFS=', '; echo "${IMPL_NAME[*]}") (reference: ${IMPL_NAME[$REFERENCE_IDX]})"
+echo ""
 
 if [[ ${#SUITES[@]} -eq 0 ]]; then
     SUITES=("00" "01" "02" "03" "04" "05" "06" "07" "08" "09")
 fi
 
-if [[ ! -f "$MANIFEST" ]]; then
-    echo "ERROR: manifest.json not found at $MANIFEST"
+if [[ ! -f "${MANIFEST}" ]]; then
+    echo "ERROR: manifest.json not found at ${MANIFEST}"
     exit 1
 fi
 
@@ -376,56 +541,56 @@ for s in "${SUITES[@]}"; do
     fi
 done
 
-suite_count=$(jq -r 'length' "$MANIFEST")
+suite_count=$(jq -r 'length' "${MANIFEST}")
 
 # --- Phase 1: build the job list (preserves manifest/suite order) ---------
 build_current_suite=""
 job_count=0
 declare -a JOB_SUITE JOB_LABEL JOB_SUITE_NAME
 JOBS_TSV="$TEST_TMPDIR/jobs.tsv"
-: > "$JOBS_TSV"
+: > "${JOBS_TSV}"
 
 for ((i=0; i<suite_count; i++)); do
-    suite=$(jq -r ".[$i].suite" "$MANIFEST")
-    label=$(jq -r ".[$i].label" "$MANIFEST")
+    suite=$(jq -r ".[$i].suite" "${MANIFEST}")
+    label=$(jq -r ".[$i].label" "${MANIFEST}")
 
     skip=true
     for s in "${SUITES[@]}"; do
-        if [[ "$suite" == "$s" ]]; then
+        if [[ "${suite}" == "$s" ]]; then
             skip=false
             break
         fi
     done
 
-    [[ "$skip" == "true" ]] && continue
+    [[ "${skip}" == "true" ]] && continue
 
-    scenario_name="test_$(echo "$label" | sed 's/-/_/')"
+    scenario_name="test_$(echo "${label}" | sed 's/-/_/')"
 
-    if [[ "$suite" != "$build_current_suite" ]]; then
-        build_current_suite="$suite"
-        current_suite_name=$(jq -r ".[$i].suite_name" "$MANIFEST")
-        current_suite_name="$(format_suite_name "$current_suite_name")"
+    if [[ "${suite}" != "${build_current_suite}" ]]; then
+        build_current_suite="${suite}"
+        current_suite_name=$(jq -r ".[$i].suite_name" "${MANIFEST}")
+        current_suite_name="$(format_suite_name "${current_suite_name}")"
         # Record suite display name once for the performance table
-        if ! grep -q "^${suite}"$'\t' "$SUITE_NAMES_FILE" 2>/dev/null; then
-            echo -e "${suite}\t${current_suite_name}" >> "$SUITE_NAMES_FILE"
+        if ! grep -q "^${suite}"$'\t' "${SUITE_NAMES_FILE}" 2>/dev/null; then
+            echo -e "${suite}\t${current_suite_name}" >> "${SUITE_NAMES_FILE}"
         fi
-        SUITE_FAIL_COUNT["$suite"]=${SUITE_FAIL_COUNT["$suite"]:-0}
+        SUITE_FAIL_COUNT["${suite}"]=${SUITE_FAIL_COUNT["${suite}"]:-0}
     fi
 
-    printf '%s\t%s\t%s\n' "$suite" "$label" "$scenario_name" >> "$JOBS_TSV"
-    JOB_SUITE[$job_count]="$suite"
-    JOB_LABEL[$job_count]="$label"
-    JOB_SUITE_NAME[$job_count]="$current_suite_name"
+    printf '%s\t%s\t%s\n' "${suite}" "${label}" "${scenario_name}" >> "${JOBS_TSV}"
+    JOB_SUITE[$job_count]="${suite}"
+    JOB_LABEL[$job_count]="${label}"
+    JOB_SUITE_NAME[$job_count]="${current_suite_name}"
     job_count=$((job_count + 1))
 done
 
 # --- Phase 2: run all jobs in parallel via xargs ---------------------------
 if [[ $job_count -gt 0 ]]; then
     NPROC=$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
-    [[ "$NPROC" -lt 1 ]] && NPROC=1
+    [[ "${NPROC}" -lt 1 ]] && NPROC=1
 
-    seq 0 $((job_count - 1)) | xargs -P "$NPROC" -I{} \
-        bash "$SCRIPT_PATH" --job-worker {} "$JOBS_TSV" "$TEST_TMPDIR"
+    seq 0 $((job_count - 1)) | xargs -P "${NPROC}" -I{} \
+        bash "${SCRIPT_PATH}" --job-worker {} "${JOBS_TSV}" "${TEST_TMPDIR}"
 fi
 
 # --- Phase 3: replay results in original manifest/suite order -------------
@@ -434,23 +599,23 @@ for ((idx=0; idx<job_count; idx++)); do
     suite="${JOB_SUITE[$idx]}"
     label="${JOB_LABEL[$idx]}"
 
-    if [[ "$suite" != "$current_suite" ]]; then
-        if [[ -n "$current_suite" ]]; then
+    if [[ "${suite}" != "${current_suite}" ]]; then
+        if [[ -n "${current_suite}" ]]; then
             echo ""
         fi
-        current_suite="$suite"
+        current_suite="${suite}"
         echo "--- Suite ${suite}: ${JOB_SUITE_NAME[$idx]} ---"
     fi
 
     scenario_output=$(cat "$TEST_TMPDIR/out_${idx}.txt" 2>/dev/null)
     rc=$(cat "$TEST_TMPDIR/rc_${idx}.txt" 2>/dev/null || echo 2)
-    echo "  $label: $scenario_output"
+    echo "  $label: ${scenario_output}"
 
-    if [[ "$rc" -eq 0 ]]; then
+    if [[ "${rc}" -eq 0 ]]; then
         pass_count=$((pass_count + 1))
     else
         fail_count=$((fail_count + 1))
-        SUITE_FAIL_COUNT["$suite"]=$((${SUITE_FAIL_COUNT["$suite"]:-0} + 1))
+        SUITE_FAIL_COUNT["${suite}"]=$((${SUITE_FAIL_COUNT["${suite}"]:-0} + 1))
     fi
     total_count=$((total_count + 1))
 done
@@ -464,114 +629,95 @@ echo -e "${GREEN}Passed: $pass_count${NC}"
 echo -e "${RED}Failed: $fail_count${NC}"
 echo "Total: $total_count"
 
-# Performance comparison table (dogfood the tables library)
-if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
-    declare -A SUITE_C_MS SUITE_SH_MS SUITE_LABEL
-    while IFS=$'\t' read -r s c_ms sh_ms; do
-        SUITE_C_MS[$s]=$((${SUITE_C_MS[$s]:-0} + c_ms))
-        SUITE_SH_MS[$s]=$((${SUITE_SH_MS[$s]:-0} + sh_ms))
-    done < "$PERF_FILE"
+# Performance comparison table (dogfood the tables library). One time
+# column per configured+available implementation, built dynamically so
+# adding a language to implementations.json needs no changes here.
+if [[ -s "${PERF_FILE}" ]]; then
+    # SUITE_IMPL_MS["<suite>|<impl_id>"] = summed ms across that suite's scenarios
+    declare -A SUITE_IMPL_MS=()
+    while IFS=$'\t' read -r s impl ms_val; do
+        key="${s}|${impl}"
+        SUITE_IMPL_MS[$key]=$(( ${SUITE_IMPL_MS[$key]:-0} + ms_val ))
+    done < "${PERF_FILE}"
 
+    declare -A SUITE_LABEL=()
     while IFS=$'\t' read -r s name; do
         SUITE_LABEL[$s]="$name"
-    done < "$SUITE_NAMES_FILE"
+    done < "${SUITE_NAMES_FILE}"
 
-    total_c=0
-    total_sh=0
-    for s in "${!SUITE_C_MS[@]}"; do
-        total_c=$((total_c + SUITE_C_MS[$s]))
-        total_sh=$((total_sh + SUITE_SH_MS[$s]))
-    done
+    declare -a TOTAL_IMPL_MS=()
+    for ((i=0; i<IMPL_COUNT; i++)); do TOTAL_IMPL_MS[i]=0; done
 
     # P/F glyphs: single-width dingbats (no emoji background)
     PF_PASS="{GREEN}✓{NC}"
     PF_FAIL="{RED}✗{NC}"
 
-    # Build ordered suite list from names file (run order)
+    # Build one jq row object per suite, with one t_<impl_id> field per
+    # implementation — constructed dynamically since the column count
+    # depends on how many implementations are configured/available.
+    build_row() {
+        local group="$1" suite="$2" pf="$3" ratio="$4"; shift 4
+        local -a jq_args=(--arg group "$group" --arg suite "$suite" --arg pf "$pf" --arg ratio "$ratio")
+        local filter='{group:$group,suite:$suite,pf:$pf,ratio:$ratio'
+        while [[ $# -gt 0 ]]; do
+            local key="t_$1" val="$2"; shift 2
+            jq_args+=(--arg "$key" "$val")
+            filter+=",${key}:\$${key}"
+        done
+        filter+='}'
+        jq -nc "${jq_args[@]}" "$filter"
+    }
+
     data_rows="["
     first=true
     while IFS=$'\t' read -r s name; do
-        c_ms="${SUITE_C_MS[$s]:-0}"
-        sh_ms="${SUITE_SH_MS[$s]:-0}"
-        if [[ $c_ms -gt 0 ]]; then
-            ratio=$(awk "BEGIN {printf \"%.1f x\", $sh_ms / $c_ms}")
-        else
-            ratio="—"
-        fi
+        row_ms=(); row_fmt_pairs=()
+        for ((i=0; i<IMPL_COUNT; i++)); do
+            v="${SUITE_IMPL_MS["${s}|${IMPL_ID[$i]}"]:-0}"
+            row_ms[i]="$v"
+            TOTAL_IMPL_MS[i]=$(( TOTAL_IMPL_MS[i] + v ))
+        done
 
-        # Color per-row: fastest language green, slowest red (scales to N langs later)
-        local_colored=()
-        mapfile -t local_colored < <(colorize_timings "$sh_ms" "$c_ms")
-        sh_fmt="${local_colored[0]}"
-        c_fmt="${local_colored[1]}"
+        mapfile -t row_colored < <(colorize_timings "${row_ms[@]}")
+        for ((i=0; i<IMPL_COUNT; i++)); do
+            row_fmt_pairs+=("${IMPL_ID[$i]}" "${row_colored[$i]}")
+        done
 
-        if [[ ${SUITE_FAIL_COUNT[$s]:-0} -eq 0 ]]; then
-            pf="$PF_PASS"
-        else
-            pf="$PF_FAIL"
-        fi
+        ratio=$(ratio_spread "${row_ms[@]}")
 
-        if [[ "$first" != "true" ]]; then
-            data_rows+=","
-        fi
+        if [[ ${SUITE_FAIL_COUNT[$s]:-0} -eq 0 ]]; then pf="$PF_PASS"; else pf="$PF_FAIL"; fi
+
+        [[ "${first}" != "true" ]] && data_rows+=","
         first=false
-        data_rows+=$(jq -nc \
-            --arg suite "$s $name" \
-            --arg pf "$pf" \
-            --arg bash_time "$sh_fmt" \
-            --arg c_time "$c_fmt" \
-            --arg ratio "$ratio" \
-            '{group:"suite",suite:$suite,pf:$pf,bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
-    done < "$SUITE_NAMES_FILE"
+        data_rows+=$(build_row "suite" "$s $name" "$pf" "$ratio" "${row_fmt_pairs[@]}")
+    done < "${SUITE_NAMES_FILE}"
 
-    if [[ $total_c -gt 0 ]]; then
-        total_ratio=$(awk "BEGIN {printf \"%.1f x\", $total_sh / $total_c}")
-    else
-        total_ratio="—"
-    fi
-    mapfile -t total_colored < <(colorize_timings "$total_sh" "$total_c")
-    total_sh_fmt="${total_colored[0]}"
-    total_c_fmt="${total_colored[1]}"
-    if [[ $fail_count -eq 0 ]]; then
-        total_pf="$PF_PASS"
-    else
-        total_pf="$PF_FAIL"
-    fi
+    mapfile -t total_colored < <(colorize_timings "${TOTAL_IMPL_MS[@]}")
+    total_pairs=()
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        total_pairs+=("${IMPL_ID[$i]}" "${total_colored[$i]}")
+    done
+    total_ratio=$(ratio_spread "${TOTAL_IMPL_MS[@]}")
+    if [[ $fail_count -eq 0 ]]; then total_pf="$PF_PASS"; else total_pf="$PF_FAIL"; fi
     data_rows+=","
-    data_rows+=$(jq -nc \
-        --arg pf "$total_pf" \
-        --arg bash_time "$total_sh_fmt" \
-        --arg c_time "$total_c_fmt" \
-        --arg ratio "$total_ratio" \
-        '{group:"total",suite:"Total",pf:$pf,bash_time:$bash_time,c_time:$c_time,ratio:$ratio}')
+    data_rows+=$(build_row "total" "Total" "$total_pf" "$total_ratio" "${total_pairs[@]}")
 
-    # Informational annotated row (excluded from any future summary math)
-    read -r bash_loc c_loc < <(count_loc)
-    if [[ ${bash_loc:-0} -gt 0 || ${c_loc:-0} -gt 0 ]]; then
-        if [[ $c_loc -gt 0 ]]; then
-            loc_ratio=$(awk "BEGIN {printf \"%.1f x\", $bash_loc / $c_loc}")
-        else
-            loc_ratio="—"
-        fi
-        # Fewer lines = green, more = red
-        bash_loc_num=$(format_int "$bash_loc")
-        c_loc_num=$(format_int "$c_loc")
-        if [[ $bash_loc -lt $c_loc ]]; then
-            bash_loc_fmt="{GREEN}${bash_loc_num}{NC}"
-            c_loc_fmt="{RED}${c_loc_num}{NC}"
-        elif [[ $c_loc -lt $bash_loc ]]; then
-            bash_loc_fmt="{RED}${bash_loc_num}{NC}"
-            c_loc_fmt="{GREEN}${c_loc_num}{NC}"
-        else
-            bash_loc_fmt="{GREEN}${bash_loc_num}{NC}"
-            c_loc_fmt="{GREEN}${c_loc_num}{NC}"
-        fi
+    # Informational annotated LOC row (excluded from any future summary math)
+    declare -a loc_vals=()
+    loc_any=0
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        loc_vals[i]=$(count_loc_for_impl "$i")
+        [[ ${loc_vals[$i]} -gt 0 ]] && loc_any=1
+    done
+    if [[ ${loc_any} -eq 1 ]]; then
+        mapfile -t loc_colored < <(colorize_counts "${loc_vals[@]}")
+        loc_pairs=()
+        for ((i=0; i<IMPL_COUNT; i++)); do
+            loc_pairs+=("${IMPL_ID[$i]}" "${loc_colored[$i]}")
+        done
+        loc_ratio=$(ratio_spread "${loc_vals[@]}")
         data_rows+=","
-        data_rows+=$(jq -nc \
-            --arg bash_time "$bash_loc_fmt" \
-            --arg c_time "$c_loc_fmt" \
-            --arg ratio "$loc_ratio" \
-            '{group:"loc",suite:"Lines of Code",pf:"",bash_time:$bash_time,c_time:$c_time,ratio:$ratio,annotate:true}')
+        data_rows+=$(build_row "loc" "Lines of Code" "" "$loc_ratio" "${loc_pairs[@]}")
     fi
 
     data_rows+="]"
@@ -581,11 +727,19 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
     # for `--results`) to read.
     perf_data_tmp="${PERF_DATA_JSON}.${RUN_ID}.tmp"
     perf_layout_tmp="${PERF_LAYOUT_JSON}.${RUN_ID}.tmp"
-    echo "$data_rows" | jq '.' > "$perf_data_tmp"
-    mv -f "$perf_data_tmp" "$PERF_DATA_JSON"
+    echo "$data_rows" | jq '.' > "${perf_data_tmp}"
+    mv -f "${perf_data_tmp}" "${PERF_DATA_JSON}"
 
     wall_fmt=$(format_ms "$SUITE_WALL_MS")
-    cat > "$perf_layout_tmp" << LAYOUT
+
+    # Build the columns array dynamically: Suite, P/F, one column per
+    # implementation (in registry order), Spread, then a hidden break column.
+    impl_columns=""
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        impl_columns+="    {\"header\": \"${IMPL_NAME[$i]}\", \"key\": \"t_${IMPL_ID[$i]}\", \"datatype\": \"text\", \"justification\": \"right\"},"$'\n'
+    done
+
+    cat > "${perf_layout_tmp}" << LAYOUT
 {
   "theme": "Red",
   "title": "Performance Comparison",
@@ -593,19 +747,18 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
   "columns": [
     {"header": "Suite", "key": "suite", "datatype": "text", "justification": "left"},
     {"header": "P/F", "key": "pf", "datatype": "text", "justification": "center"},
-    {"header": "Bash", "key": "bash_time", "datatype": "text", "justification": "right"},
-    {"header": "C", "key": "c_time", "datatype": "text", "justification": "right"},
-    {"header": "Bash / C", "key": "ratio", "datatype": "text", "justification": "right"},
+${impl_columns}    {"header": "Spread", "key": "ratio", "datatype": "text", "justification": "right"},
     {"header": "group", "key": "group", "datatype": "text", "justification": "left", "visible": false, "break": true}
   ],
   "footer": "Test Suite Execution Time: {BOLD}{WHITE}${wall_fmt}{NC}",
   "footer_position": "center"
 }
 LAYOUT
-    mv -f "$perf_layout_tmp" "$PERF_LAYOUT_JSON"
+    mv -f "${perf_layout_tmp}" "${PERF_LAYOUT_JSON}"
 
     echo ""
-    "$C_BIN" "$PERF_LAYOUT_JSON" "$PERF_DATA_JSON" 2>/dev/null || true
+    expand_cmd "${IMPL_RUN_TOKENS[${REFERENCE_IDX}]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
+    "${CMD_ARR[@]}" 2>/dev/null || true
 fi
 
 exit $fail_count

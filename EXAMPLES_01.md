@@ -71,8 +71,6 @@ colour handling; those are shown inline with each example.
 
 ## 1-A — Text and integer columns with a hidden duplicate
 
-<!-- screenshot:1-A -->
-
 **What it demonstrates.** The minimum viable layout — a theme and a `columns` array —
 plus two ideas that are easy to miss: a key may be used by more than one column, and a
 column can be present in the layout but absent from the output.
@@ -114,16 +112,7 @@ column can be present in the layout but absent from the output.
 
 **Output**
 
-```text
-╭────┬───────────────┬──────────╮
-│ ID │ Server Name   │  Status  │
-├────┼───────────────┼──────────┤
-│  1 │ web-server-01 │ Running  │
-│  2 │ db-server-01  │ Running  │
-│  3 │ cache-server  │ Starting │
-│  4 │ api-gateway   │ Running  │
-╰────┴───────────────┴──────────╯
-```
+![1-A output](images/1-A.svg)
 
 **What to look for**
 
@@ -142,8 +131,6 @@ column can be present in the layout but absent from the output.
 ---
 
 ## 1-B — Numeric datatypes side by side
-
-<!-- screenshot:1-B -->
 
 **What it demonstrates.** The difference between `int`, `num` and `float`, and the second
 theme.
@@ -178,23 +165,13 @@ theme.
 
 **Output**
 
-```text
-╭────┬───────────┬──────────────╮
-│ ID │ CPU Cores │ Load Average │
-├────┼───────────┼──────────────┤
-│  1 │         4 │         2.45 │
-│  2 │         8 │         5.12 │
-│  3 │         2 │         0.85 │
-│  4 │         6 │         3.21 │
-╰────┴───────────┴──────────────╯
-```
+![1-B output](images/1-B.svg)
 
 **What to look for**
 
-* `"theme": "Blue"` changes the border and caption colours. In the monochrome capture
-  above it is invisible by design — the theme must never alter geometry, only colour.
-  Compare this table's shape with 1-A's and you will find the rules identical in
-  construction.
+* `"theme": "Blue"` changes the border and caption colours — compare the blue frame here
+  with 1-A's red one. The theme only ever touches colour, never geometry: put the two
+  images side by side and the shapes are identical in construction.
 * `int` and `num` render identically here because none of the values reach four digits.
   The distinction only appears once a value crosses 1,000, at which point `num` inserts
   separators and `int` does not — see [1-E](#1-e--all-six-datatypes-in-one-table).
@@ -205,8 +182,6 @@ theme.
 ---
 
 ## 1-C — Kubernetes CPU and memory normalisation
-
-<!-- screenshot:1-C -->
 
 **What it demonstrates.** The two domain-specific datatypes, `kcpu` and `kmem`, which
 parse Kubernetes resource quantities and re-emit them in a canonical form.
@@ -241,16 +216,7 @@ parse Kubernetes resource quantities and re-emit them in a canonical form.
 
 **Output**
 
-```text
-╭───────────────┬───────────┬──────────────╮
-│ Server        │ CPU Usage │ Memory Usage │
-├───────────────┼───────────┼──────────────┤
-│ web-server-01 │    1,250m │       2,048M │
-│ db-server-01  │    3,200m │       8,192M │
-│ cache-server  │      500m │       1,024M │
-│ api-gateway   │    2,100m │       4,096M │
-╰───────────────┴───────────┴──────────────╯
-```
+![1-C output](images/1-C.svg)
 
 **What to look for**
 
@@ -268,8 +234,6 @@ parse Kubernetes resource quantities and re-emit them in a canonical form.
 ---
 
 ## 1-D — Centring every column
-
-<!-- screenshot:1-D -->
 
 **What it demonstrates.** `"justification": "center"` applied uniformly, including to a
 numeric column, and the rounding rule used when the leftover space cannot be split evenly.
@@ -304,16 +268,7 @@ numeric column, and the rounding rule used when the leftover space cannot be spl
 
 **Output**
 
-```text
-╭────┬──────────┬──────╮
-│ ID │  Status  │ Load │
-├────┼──────────┼──────┤
-│ 1  │ Running  │ 2.45 │
-│ 2  │ Running  │ 5.12 │
-│ 3  │ Starting │ 0.85 │
-│ 4  │ Running  │ 3.21 │
-╰────┴──────────┴──────╯
-```
+![1-D output](images/1-D.svg)
 
 **What to look for**
 
@@ -328,8 +283,6 @@ numeric column, and the rounding rule used when the leftover space cannot be spl
 ---
 
 ## 1-E — All six datatypes in one table
-
-<!-- screenshot:1-E -->
 
 **What it demonstrates.** `text`, `num`, `float`, `kcpu` and `kmem` in a single layout,
 with `int` supplying the row identifier — the whole type system in one view.
@@ -382,16 +335,7 @@ with `int` supplying the row identifier — the whole type system in one view.
 
 **Output**
 
-```text
-╭────┬───────────────┬───────┬──────┬────────┬────────╮
-│ ID │ Name          │ Cores │ Load │    CPU │ Memory │
-├────┼───────────────┼───────┼──────┼────────┼────────┤
-│  1 │ web-server-01 │     4 │ 2.45 │ 1,250m │ 2,048M │
-│  2 │ db-server-01  │     8 │ 5.12 │ 3,200m │ 8,192M │
-│  3 │ cache-server  │     2 │ 0.85 │   500m │ 1,024M │
-│  4 │ api-gateway   │     6 │ 3.21 │ 2,100m │ 4,096M │
-╰────┴───────────────┴───────┴──────┴────────┴────────╯
-```
+![1-E output](images/1-E.svg)
 
 **What to look for**
 
@@ -407,8 +351,6 @@ with `int` supplying the row identifier — the whole type system in one view.
 ---
 
 ## 1-F — One value, three justifications
-
-<!-- screenshot:1-F -->
 
 **What it demonstrates.** The clearest possible comparison of the three alignments, by
 pointing two columns at the same key and varying only `justification`.
@@ -443,16 +385,7 @@ pointing two columns at the same key and varying only `justification`.
 
 **Output**
 
-```text
-╭───────────────┬─────────────┬───────────────╮
-│ Left Text     │ Center Text │    Right Text │
-├───────────────┼─────────────┼───────────────┤
-│ web-server-01 │   Running   │ web-server-01 │
-│ db-server-01  │   Running   │  db-server-01 │
-│ cache-server  │  Starting   │  cache-server │
-│ api-gateway   │   Running   │   api-gateway │
-╰───────────────┴─────────────┴───────────────╯
-```
+![1-F output](images/1-F.svg)
 
 **What to look for**
 
@@ -468,8 +401,6 @@ pointing two columns at the same key and varying only `justification`.
 ---
 
 ## 1-G — Colour placeholders in data and title
-
-<!-- screenshot:1-G -->
 
 **What it demonstrates.** `{COLOR}` markup in cell values *and* in the title, combined
 with fixed column widths.
@@ -536,24 +467,13 @@ with fixed column widths.
 
 **Output**
 
-```text
-            ╭─────────────────────────────────────╮
-            │ Color Test - WHITE and RED in Title │
-╭───────────┴────────┬─────────────────────────┬──┴────────────╮
-│ Name               │         Status          │         Value │
-├────────────────────┼─────────────────────────┼───────────────┤
-│ Success Item       │       Processing        │           100 │
-│ Error Item         │     Warning Status      │           250 │
-│ Info Item          │          Ready          │            75 │
-│ Bright Item        │         Special         │           999 │
-╰────────────────────┴─────────────────────────┴───────────────╯
-```
+![1-G output](images/1-G.svg)
 
 **What to look for**
 
-* Run this one *without* `--mono` to see the point: each value carries its own colour, and
-  the title contains two differently coloured words. In the monochrome capture the markup
-  has been removed and the text closes up seamlessly.
+* Each value carries its own colour, and the title contains two differently coloured
+  words (`WHITE` and `RED`). Run this one with `--mono` and the markup is stripped
+  entirely — the text closes up seamlessly with no gap left behind.
 * The recognised placeholders are `{RED}`, `{GREEN}`, `{BLUE}`, `{YELLOW}`, `{CYAN}`,
   `{MAGENTA}`, `{WHITE}`, `{BOLD}`, `{DIM}`, `{UNDERLINE}` and the two equivalent
   terminators `{RESET}` and `{NC}`.
@@ -567,8 +487,6 @@ with fixed column widths.
 ---
 
 ## 1-H — Clipping coloured text
-
-<!-- screenshot:1-H -->
 
 **What it demonstrates.** What happens when coloured content is too wide for its column,
 and how the surviving fragment depends on the column's justification.
@@ -630,17 +548,7 @@ and how the surviving fragment depends on the column's justification.
 
 **Output**
 
-```text
-             ╭───────────────────────────────────────────────────╮
-             │ Color Clipping Test with Different Justifications │
-╭────────────┴────────────┬─────────────────────────┬────────────┴────────────╮
-│ Left Clipped            │     Center Clipped      │           Right Clipped │
-├─────────────────────────┼─────────────────────────┼─────────────────────────┤
-│ This is a very long red │ y long blue text that w │ xt that will be clipped │
-│ Short                   │       Medium text       │        Longer text here │
-│ No colors here          │   Mixed colors in one   │          Formatted text │
-╰─────────────────────────┴─────────────────────────┴─────────────────────────╯
-```
+![1-H output](images/1-H.svg)
 
 **What to look for**
 
@@ -664,8 +572,6 @@ and how the surviving fragment depends on the column's justification.
 ---
 
 ## 1-I — Nested and multiple placeholders
-
-<!-- screenshot:1-I -->
 
 **What it demonstrates.** Edge cases in placeholder parsing: nesting, back-to-back colour
 changes, partial colouring of a value — and what happens to a token that merely *looks*
@@ -738,17 +644,7 @@ like a placeholder.
 
 **Output**
 
-```text
-╭──────────────────────────────────────────────────────────────────────────────╮
-│                       Complex Color Test - Edge Cases                        │
-├───────────────┬────────────────────┬──────────────────┬──────────────────────┤
-│ Simple        │       Nested       │         Multiple │ Mixed Content        │
-├───────────────┼────────────────────┼──────────────────┼──────────────────────┤
-│ Red           │      Bold Red      │              RGB │ Start Yellow End     │
-│ Plain text    │  Underlined Cyan   │       Bold White │ Dim and {BRIGHT}Brig │
-│ Very long gre │ long text that sho │           ABCDEF │ Mix of red and norma │
-╰───────────────┴────────────────────┴──────────────────┴──────────────────────╯
-```
+![1-I output](images/1-I.svg)
 
 **What to look for**
 

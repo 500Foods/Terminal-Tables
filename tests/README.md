@@ -4,15 +4,16 @@ This directory contains the comparison test suite for the Terminal Tables implem
 
 ## Overview
 
-The test suite compares the output of the C implementation (`tables.c/tables`) against the Bash implementation (`tables.sh/tables.sh`) to ensure identical rendering. Both implementations are run with the same JSON data and layout files, and their outputs are compared including ANSI color sequences (after normalizing dynamic content only).
+The test suite runs every configured implementation (see `tests/implementations.json`) against the same JSON data and layout files, and compares their output including ANSI color sequences (after normalizing dynamic content only). Implementations are **not** hard-coded into `run_tests.sh` — the runner reads `tests/implementations.json` to discover which languages/binaries to test, run, lint, and count lines of code for, so the performance table and comparisons automatically grow to fit however many implementations are configured.
 
-**Bash is the reference implementation.** The Bash implementation was the original variant created; all other implementations (C, and any future ports) are compared *against* Bash output as the oracle.
+**Bash is the reference implementation.** The Bash implementation was the original variant created; all other implementations (C, and any future ports) are compared *against* Bash output as the oracle. Exactly one entry in `implementations.json` is marked `"reference": true`; every other configured implementation's output (colored and `--mono`) is diffed against it.
 
 ## Directory Structure
 
 ```
 tests/
-├── run_tests.sh              # Shell-based test runner
+├── run_tests.sh              # Shell-based test runner (implementation-agnostic)
+├── implementations.json      # Registry of implementations under test
 ├── README.md                 # This documentation
 └── scenarios/
     ├── manifest.json         # Master manifest of all comparison test cases
@@ -27,7 +28,7 @@ tests/
     └── suite_09/             # Showcase with multiple tables
 ```
 
-Suite 00 (Linting) is handled by `run_tests.sh` directly: shellcheck on `tables.sh/tables.sh` and cppcheck on `tables.c/`. Pass = zero issues; fail = non-zero exit.
+Suite 00 (Linting) runs each implementation's configured `lint.cmd` from `implementations.json` (currently shellcheck on `tables.sh/tables.sh` and cppcheck on `tables.c/`). Pass = zero issues; fail = non-zero exit. An implementation without a `lint` entry, or whose lint tool isn't installed, is skipped for linting only.
 
 ### Scenario Files
 
@@ -76,10 +77,39 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
 
 ## Adding New Language Implementations
 
-**Bash is the reference oracle.** When adding a new language implementation, it must match the Bash output (after normalization) for every scenario. To add a new language:
-1. Add the implementation binary/script path to `run_tests.sh`
-2. Add a symlink setup block in the `run_scenario()` function
-3. Add a new `run` block alongside the C and Bash calls
+**Bash is the reference oracle.** When adding a new language implementation, it must match the Bash output (after normalization) for every scenario. `run_tests.sh` has no per-language code — implementations are declared entirely in `tests/implementations.json`. To add a language (e.g. Python, Lua, Rust, Go):
+
+1. Build/implement it wherever makes sense (e.g. `tables.py/tables.py`) so it accepts `layout.json data.json [--mono]` like the existing implementations.
+2. Append an entry to `tests/implementations.json`:
+   ```json
+   {
+     "id": "python",
+     "name": "Python",
+     "run": ["python3", "{PROJECT_ROOT}/tables.py/tables.py", "{LAYOUT}", "{DATA}"],
+     "timeout": 30,
+     "lint": {"name": "ruff", "cmd": ["ruff", "check", "{PROJECT_ROOT}/tables.py"]},
+     "loc": {"path": "tables.py", "cloc_langs": "Python"}
+   }
+   ```
+3. That's it — `run_tests.sh` will run it against every scenario, diff its output (color and `--mono`) against the reference, lint it (if `lint` is set and the tool is installed), include it in the Lines of Code row (if `loc` is set and `cloc` is installed), and add a column for it to the performance table automatically.
+
+### `implementations.json` schema
+
+Each array entry describes one implementation:
+
+| Field           | Required | Meaning                                                                                          |
+|-----------------|----------|---------------------------------------------------------------------------------------------------|
+| `id`            | yes      | Short key used internally (perf-table column key, PERF_FILE rows). No spaces.                     |
+| `name`          | yes      | Display name (performance table header, scenario summary line).                                   |
+| `reference`     | no       | `true` on exactly one entry — the correctness oracle every other implementation is diffed against. |
+| `run`           | yes      | Argv array to execute. Supports `{PROJECT_ROOT}`, `{LAYOUT}`, `{DATA}` placeholders; `--mono` is appended automatically for the mono comparison pass. |
+| `timeout`       | no       | Per-invocation timeout in seconds (default 30).                                                    |
+| `lint.name`     | no       | Display name for the lint tool (suite 00 output line).                                             |
+| `lint.cmd`      | no       | Argv array for the lint command (same placeholders as `run`, minus `{LAYOUT}`/`{DATA}`).            |
+| `loc.path`      | no       | Path (relative to the repo root) passed to `cloc` for the Lines of Code row.                       |
+| `loc.cloc_langs`| no       | Optional `cloc --include-lang` filter (e.g. `"C,C/C++ Header"`).                                   |
+
+An implementation whose `run`'s first token isn't an executable file (absolute path) or a command on `PATH` (bare name) is skipped with a warning instead of failing the whole run — useful while a language is only partially wired up.
 
 ## Normalization
 
@@ -90,16 +120,16 @@ ANSI color codes and separator geometry are **not** stripped. Both implementatio
 
 ## CLI options tested implicitly
 
-Both implementations support `--mono` (disable all ANSI colors). Comparison runs use the default colored path so ANSI parity is enforced.
+All implementations are expected to support `--mono` (disable all ANSI colors). Every scenario runs each implementation twice: once with default colors and once with `--mono`, and both must match the reference for the scenario to pass.
 
 ## Performance Notes
 
-- The Bash implementation is slower than C (~0.5-2s per table) due to `jq` subprocess calls
-- Test suite 08 (17 cases) and 09 (22 cases) can take 30-60 seconds in Bash
-- Shell runner uses 120s timeout for Bash, 30s for C
+- Per-implementation timeout comes from `implementations.json` (`timeout`, seconds); currently 120s for Bash and 10s for C.
+- The performance table's per-implementation timeout, LOC path, and lint command all come from `implementations.json` — see that file to tune any of them.
 
 ## Requirements
 
 - **C**: Compiled binary at `tables.c/tables` (requires `libjansson-dev`)
 - **Bash**: `tables.sh/tables.sh` (requires `jq`)
-- **Test runner**: `jq` (for parsing the manifest and dynamic layouts)
+- **Test runner**: `jq` (for parsing the manifest, dynamic layouts, and `implementations.json`)
+- Optional, per implementation: its configured lint tool (e.g. `shellcheck`, `cppcheck`) and `cloc` for the Lines of Code row.

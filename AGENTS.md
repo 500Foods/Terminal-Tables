@@ -4,7 +4,7 @@
 
 - `tables.c/` — C implementation of the terminal tables library
 - `tables.sh/` — Bash implementation of the terminal tables library
-- `tests/` — Comparison test suite (runs both implementations and compares output)
+- `tests/` — Comparison test suite. Implementations under test are declared in `tests/implementations.json`, not hard-coded in the runner — see `tests/README.md` for the schema before adding a new language (Python, Lua, Rust, Go, …).
 
 ## Building
 
@@ -17,9 +17,10 @@ make -C tables.c uncompressed # strip only
 ## Running Tests
 
 ```bash
-# Shell-based test runner (compares C vs Bash output)
+# Shell-based test runner (runs every implementation in tests/implementations.json)
 bash tests/run_tests.sh           # Run all suites
 bash tests/run_tests.sh 01 05 09  # Run specific suites
+bash tests/run_tests.sh --results # Re-show the performance table from the last run
 ```
 
 ### Test Scripts
@@ -30,6 +31,7 @@ The `tests/scenarios/manifest.json` file lists all test cases.
 ```
 tests/
 ├── run_tests.sh           # Shell runner: iterates scenarios, compares output
+├── implementations.json   # Registry of implementations under test (id, run cmd, lint, loc)
 ├── README.md              # This documentation
 └── scenarios/
     ├── manifest.json      # Master manifest of all test cases
@@ -73,11 +75,11 @@ The comparison normalizes only:
 
 ANSI color codes and separator geometry are **not** stripped. Both implementations must emit identical theme colors, placeholder expansions (`{RED}`, `{NC}`, …), color scoping (pad outside color; reset after content), and border/separator line lengths.
 
-**Bash is the reference implementation.** The Bash implementation (`tables.sh/tables.sh`) was the original variant created. All language implementations (C, future ports) are compared *against* the Bash output as the oracle. When adding a new language implementation, it should match the Bash output after normalization.
+**Bash is the reference implementation.** The Bash implementation (`tables.sh/tables.sh`) was the original variant created. All language implementations (C, future ports) are compared *against* the Bash output as the oracle — marked via `"reference": true` in `tests/implementations.json`. When adding a new language implementation, it should match the Bash output after normalization; the runner diffs every configured implementation against the reference automatically.
 
 ### CLI options
 
-Both implementations accept:
+All implementations are expected to accept:
 - `--mono` — disable all ANSI colors (theme colors and `{COLOR}` placeholders expand to empty)
 - `--help` / `-h`, `--version`
 - C only: `--debug`, `--debug_layout`
@@ -86,7 +88,7 @@ Both implementations accept:
 
 - The Bash implementation is slower than C (~0.5-2s per table) due to `jq` subprocess calls
 - Test suite 08 (17 sub-tests) and 09 (22 sub-tests) take 30-60 seconds in Bash
-- The shell test runner uses 120s timeout for Bash, 30s for C
+- Per-implementation timeouts are configured in `tests/implementations.json` (currently 120s for Bash, 10s for C)
 
 ## Bash Bugs Fixed
 

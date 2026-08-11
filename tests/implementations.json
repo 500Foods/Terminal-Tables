@@ -1,0 +1,30 @@
+[
+  {
+    "id": "bash",
+    "name": "Bash",
+    "reference": true,
+    "run": ["bash", "{PROJECT_ROOT}/tables.sh/tables.sh", "{LAYOUT}", "{DATA}"],
+    "timeout": 120,
+    "lint": {
+      "name": "shellcheck",
+      "cmd": ["shellcheck", "{PROJECT_ROOT}/tables.sh/tables.sh"]
+    },
+    "loc": {
+      "path": "tables.sh"
+    }
+  },
+  {
+    "id": "c",
+    "name": "C",
+    "run": ["{PROJECT_ROOT}/tables.c/tables", "{LAYOUT}", "{DATA}"],
+    "timeout": 10,
+    "lint": {
+      "name": "cppcheck",
+      "cmd": ["cppcheck", "--error-exitcode=1", "--quiet", "{PROJECT_ROOT}/tables.c"]
+    },
+    "loc": {
+      "path": "tables.c",
+      "cloc_langs": "C,C/C++ Header"
+    }
+  }
+]
