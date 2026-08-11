@@ -76,9 +76,6 @@ suite 04 does not sort it. That turns out to be instructive.
 ---
 
 ## 4-A — Breaks, summaries and a wrapped description
-
-<!-- screenshot:4-A -->
-
 **What it demonstrates.** The canonical combination — group separators, five different
 summaries, and a wide wrapped prose column — plus what `break` does to unsorted data.
 
@@ -138,32 +135,9 @@ summaries, and a wide wrapped prose column — plus what `break` does to unsorte
 
 **Output**
 
-```text
-╭────┬───────────────┬──────────┬───────────┬──────────┬──────────────────────────────────────────────────╮
-│ ID │ Server Name   │ Category │ CPU Cores │ Load Avg │ Description                                      │
-├────┼───────────────┼──────────┼───────────┼──────────┼──────────────────────────────────────────────────┤
-│  1 │ web-server-01 │   Web    │         4 │     2.45 │ Primary web server for frontend applications     │
-│    │               │          │           │          │ with a very long description to test wrapping    │
-│    │               │          │           │          │ functionality. This description is extended to   │
-│    │               │          │           │          │ ensure that it will wrap across multiple lines   │
-│    │               │          │           │          │ when a width constraint is applied in the test   │
-│    │               │          │           │          │ configuration. Additional text is added here for │
-│    │               │          │           │          │ thorough testing.                                │
-├────┼───────────────┼──────────┼───────────┼──────────┼──────────────────────────────────────────────────┤
-│  2 │ db-server-01  │ Database │         8 │     5.12 │ Main database server handling critical data      │
-│    │               │          │           │          │ storage and retrieval operations.                │
-├────┼───────────────┼──────────┼───────────┼──────────┼──────────────────────────────────────────────────┤
-│  3 │ cache-server  │  Cache   │         2 │     0.85 │ In-memory cache for speeding up data access in   │
-│    │               │          │           │          │ applications.                                    │
-├────┼───────────────┼──────────┼───────────┼──────────┼──────────────────────────────────────────────────┤
-│  4 │ api-gateway   │   Web    │         6 │     3.21 │ API gateway managing incoming requests and       │
-│    │               │          │           │          │ routing to appropriate services with detailed    │
-│    │               │          │           │          │ logging and monitoring capabilities enabled for  │
-│    │               │          │           │          │ performance tracking.                            │
-├────┼───────────────┼──────────┼───────────┼──────────┼──────────────────────────────────────────────────┤
-│  4 │ 4             │    3     │        20 │     2.91 │                                                  │
-╰────┴───────────────┴──────────┴───────────┴──────────┴──────────────────────────────────────────────────╯
-```
+
+
+![4-A output](images/4-A.svg)
 
 **What to look for**
 
@@ -185,9 +159,6 @@ summaries, and a wide wrapped prose column — plus what `break` does to unsorte
 ---
 
 ## 4-B — Kubernetes totals with a tag list
-
-<!-- screenshot:4-B -->
-
 **What it demonstrates.** Resource accounting: `kcpu` and `kmem` totals beside a
 delimiter-wrapped tag column, with no breaks to interrupt the flow.
 
@@ -240,35 +211,9 @@ delimiter-wrapped tag column, with no breaks to interrupt the flow.
 
 **Output**
 
-```text
-╭───────────────┬──────────┬───────────┬──────────────┬─────────────────────────╮
-│ Server        │  Status  │ CPU Usage │ Memory Usage │ Tags                    │
-├───────────────┼──────────┼───────────┼──────────────┼─────────────────────────┤
-│ web-server-01 │ Running  │    1,250m │       2,048M │ frontend                │
-│               │          │           │              │ app                     │
-│               │          │           │              │ ui                      │
-│               │          │           │              │ primary                 │
-│               │          │           │              │ loadbalancer            │
-│               │          │           │              │ highavailability        │
-│ db-server-01  │ Running  │    3,200m │       8,192M │ db                      │
-│               │          │           │              │ sql                     │
-│               │          │           │              │ storage                 │
-│               │          │           │              │ primary                 │
-│               │          │           │              │ backend                 │
-│ cache-server  │ Starting │      500m │       1,024M │ cache                   │
-│               │          │           │              │ redis                   │
-│               │          │           │              │ fast                    │
-│               │          │           │              │ memory                  │
-│ api-gateway   │ Running  │    2,100m │       4,096M │ api                     │
-│               │          │           │              │ gateway                 │
-│               │          │           │              │ routing                 │
-│               │          │           │              │ web                     │
-│               │          │           │              │ interface               │
-│               │          │           │              │ management              │
-├───────────────┼──────────┼───────────┼──────────────┼─────────────────────────┤
-│ 4             │    2     │    7,050m │      15,360M │                         │
-╰───────────────┴──────────┴───────────┴──────────────┴─────────────────────────╯
-```
+
+
+![4-B output](images/4-B.svg)
 
 **What to look for**
 
@@ -286,9 +231,6 @@ delimiter-wrapped tag column, with no breaks to interrupt the flow.
 ---
 
 ## 4-C — Centred prose between numeric columns
-
-<!-- screenshot:4-C -->
-
 **What it demonstrates.** A centred wrapped column, and a layout that deliberately does not
 put its widest column last.
 
@@ -340,32 +282,9 @@ put its widest column last.
 
 **Output**
 
-```text
-╭────┬───────────────┬──────────────┬────────────────────────────────────────┬───────────╮
-│ ID │ Server Name   │ Load Average │              Description               │ CPU Cores │
-├────┼───────────────┼──────────────┼────────────────────────────────────────┼───────────┤
-│  1 │ web-server-01 │         2.45 │    Primary web server for frontend     │         4 │
-│    │               │              │     applications with a very long      │           │
-│    │               │              │      description to test wrapping      │           │
-│    │               │              │   functionality. This description is   │           │
-│    │               │              │  extended to ensure that it will wrap  │           │
-│    │               │              │   across multiple lines when a width   │           │
-│    │               │              │   constraint is applied in the test    │           │
-│    │               │              │   configuration. Additional text is    │           │
-│    │               │              │    added here for thorough testing.    │           │
-│  2 │ db-server-01  │         5.12 │ Main database server handling critical │         8 │
-│    │               │              │ data storage and retrieval operations. │           │
-│  3 │ cache-server  │         0.85 │  In-memory cache for speeding up data  │         2 │
-│    │               │              │        access in applications.         │           │
-│  4 │ api-gateway   │         3.21 │ API gateway managing incoming requests │         6 │
-│    │               │              │  and routing to appropriate services   │           │
-│    │               │              │  with detailed logging and monitoring  │           │
-│    │               │              │  capabilities enabled for performance  │           │
-│    │               │              │               tracking.                │           │
-├────┼───────────────┼──────────────┼────────────────────────────────────────┼───────────┤
-│  1 │ 4             │         5.12 │                                        │         5 │
-╰────┴───────────────┴──────────────┴────────────────────────────────────────┴───────────╯
-```
+
+
+![4-C output](images/4-C.svg)
 
 **What to look for**
 
@@ -384,9 +303,6 @@ put its widest column last.
 ---
 
 ## 4-D — A summary showcase with a wrapped tail column
-
-<!-- screenshot:4-D -->
-
 **What it demonstrates.** Six columns, six different summaries, each header naming its own
 aggregation — with a right-justified wrapped list on the end.
 
@@ -453,35 +369,9 @@ aggregation — with a right-justified wrapped list on the end.
 
 **Output**
 
-```text
-╭─────────┬──────────┬──────────┬─────────┬───────┬────────────┬────────────────────╮
-│ Sum CPU │ Min Load │ Max Load │ Avg CPU │ Count │ Unique Cat │               Tags │
-├─────────┼──────────┼──────────┼─────────┼───────┼────────────┼────────────────────┤
-│       4 │     2.45 │     2.45 │       4 │     1 │    Web     │           frontend │
-│         │          │          │         │       │            │                app │
-│         │          │          │         │       │            │                 ui │
-│         │          │          │         │       │            │            primary │
-│         │          │          │         │       │            │       loadbalancer │
-│         │          │          │         │       │            │   highavailability │
-│       8 │     5.12 │     5.12 │       8 │     2 │  Database  │                 db │
-│         │          │          │         │       │            │                sql │
-│         │          │          │         │       │            │            storage │
-│         │          │          │         │       │            │            primary │
-│         │          │          │         │       │            │            backend │
-│       2 │     0.85 │     0.85 │       2 │     3 │   Cache    │              cache │
-│         │          │          │         │       │            │              redis │
-│         │          │          │         │       │            │               fast │
-│         │          │          │         │       │            │             memory │
-│       6 │     3.21 │     3.21 │       6 │     4 │    Web     │                api │
-│         │          │          │         │       │            │            gateway │
-│         │          │          │         │       │            │            routing │
-│         │          │          │         │       │            │                web │
-│         │          │          │         │       │            │          interface │
-│         │          │          │         │       │            │         management │
-├─────────┼──────────┼──────────┼─────────┼───────┼────────────┼────────────────────┤
-│      20 │     0.85 │     5.12 │       5 │     4 │     3      │                    │
-╰─────────┴──────────┴──────────┴─────────┴───────┴────────────┴────────────────────╯
-```
+
+
+![4-D output](images/4-D.svg)
 
 **What to look for**
 
@@ -502,9 +392,6 @@ aggregation — with a right-justified wrapped list on the end.
 ---
 
 ## 4-E — A full-width report layout
-
-<!-- screenshot:4-E -->
-
 **What it demonstrates.** The shape most people actually want: an identifier, a grouped
 category, a name, a status, a wide wrapped description, and a total — 111 columns of
 readable report.
@@ -563,30 +450,9 @@ readable report.
 
 **Output**
 
-```text
-╭────┬──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────┬─────╮
-│ ID │ Category │ Server        │  Status  │ Description                                                │ CPU │
-├────┼──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────┼─────┤
-│  1 │ Web      │ web-server-01 │ Running  │ Primary web server for frontend applications with a very   │   4 │
-│    │          │               │          │ long description to test wrapping functionality. This      │     │
-│    │          │               │          │ description is extended to ensure that it will wrap across │     │
-│    │          │               │          │ multiple lines when a width constraint is applied in the   │     │
-│    │          │               │          │ test configuration. Additional text is added here for      │     │
-│    │          │               │          │ thorough testing.                                          │     │
-├────┼──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────┼─────┤
-│  2 │ Database │ db-server-01  │ Running  │ Main database server handling critical data storage and    │   8 │
-│    │          │               │          │ retrieval operations.                                      │     │
-├────┼──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────┼─────┤
-│  3 │ Cache    │ cache-server  │ Starting │ In-memory cache for speeding up data access in             │   2 │
-│    │          │               │          │ applications.                                              │     │
-├────┼──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────┼─────┤
-│  4 │ Web      │ api-gateway   │ Running  │ API gateway managing incoming requests and routing to      │   6 │
-│    │          │               │          │ appropriate services with detailed logging and monitoring  │     │
-│    │          │               │          │ capabilities enabled for performance tracking.             │     │
-├────┼──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────┼─────┤
-│  4 │          │               │    2     │                                                            │  20 │
-╰────┴──────────┴───────────────┴──────────┴────────────────────────────────────────────────────────────┴─────╯
-```
+
+
+![4-E output](images/4-E.svg)
 
 **What to look for**
 

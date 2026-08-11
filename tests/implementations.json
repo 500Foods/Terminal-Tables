@@ -16,6 +16,7 @@
   {
     "id": "c",
     "name": "C",
+    "baseline": true,
     "run": ["{PROJECT_ROOT}/tables.c/tables", "{LAYOUT}", "{DATA}"],
     "timeout": 10,
     "lint": {

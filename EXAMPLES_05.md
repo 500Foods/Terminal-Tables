@@ -104,9 +104,6 @@ side by side.
 ---
 
 ## 5-A — A centred title narrower than the table
-
-<!-- screenshot:5-A -->
-
 **What it demonstrates.** The common case: a short descriptive title centred over a table
 that also carries a summary row.
 
@@ -152,20 +149,9 @@ that also carries a summary row.
 
 **Output**
 
-```text
-         ╭────────────────────────╮
-         │ Server Overview Report │
-╭────┬───┴───────────┬──────────┬─┴─────────╮
-│ ID │ Server Name   │ Category │ CPU Cores │
-├────┼───────────────┼──────────┼───────────┤
-│  1 │ web-server-01 │   Web    │         4 │
-│  2 │ db-server-01  │ Database │         8 │
-│  3 │ cache-server  │  Cache   │         2 │
-│  4 │ api-gateway   │   Web    │         6 │
-├────┼───────────────┼──────────┼───────────┤
-│  4 │ 4             │    3     │        20 │
-╰────┴───────────────┴──────────┴───────────╯
-```
+
+
+![5-A output](images/5-A.svg)
 
 **What to look for**
 
@@ -183,9 +169,6 @@ that also carries a summary row.
 ---
 
 ## 5-B — A title wider than the table
-
-<!-- screenshot:5-B -->
-
 **What it demonstrates.** What omitting `title_position` buys you — a long title that is
 allowed to overhang rather than being truncated.
 
@@ -229,27 +212,9 @@ allowed to overhang rather than being truncated.
 
 **Output**
 
-```text
-╭───────────────────────────────────────────────────────────────────────────╮
-│ Detailed Server Performance and Configuration Analysis Report for Q2 2023 │
-├────┬───────────────┬──────────────────────────────┬──────────┬────────────╯
-│ ID │ Server Name   │ Description                  │ Load Avg │
-├────┼───────────────┼──────────────────────────────┼──────────┤
-│  1 │ web-server-01 │ Primary web server for       │     2.45 │
-│    │               │ frontend applications with a │          │
-│    │               │ detailed setup.              │          │
-│  2 │ db-server-01  │ Main database server         │     5.12 │
-│    │               │ handling critical data       │          │
-│    │               │ operations.                  │          │
-│  3 │ cache-server  │ In-memory cache for speeding │     0.85 │
-│    │               │ up data access.              │          │
-│  4 │ api-gateway   │ API gateway managing         │     3.21 │
-│    │               │ incoming requests and        │          │
-│    │               │ routing.                     │          │
-├────┼───────────────┼──────────────────────────────┼──────────┤
-│    │               │                              │     2.91 │
-╰────┴───────────────┴──────────────────────────────┴──────────╯
-```
+
+
+![5-B output](images/5-B.svg)
 
 **What to look for**
 
@@ -265,9 +230,6 @@ allowed to overhang rather than being truncated.
 ---
 
 ## 5-C — A centred title over a wrapped column
-
-<!-- screenshot:5-C -->
-
 **What it demonstrates.** A title on a tall table, where the wrapped `Tags` column has made
 the body many lines deep.
 
@@ -322,35 +284,9 @@ the body many lines deep.
 
 **Output**
 
-```text
-            ╭──────────────────────────────────────────────╮
-            │ Comprehensive Resource Utilization Dashboard │
-╭───────────┴───┬───────────┬──────────┬───────────┬───────┴────────────╮
-│ Server        │ CPU Cores │ Load Avg │ CPU Usage │        Tags        │
-├───────────────┼───────────┼──────────┼───────────┼────────────────────┤
-│ web-server-01 │         4 │     2.45 │    1,250m │      frontend      │
-│               │           │          │           │        app         │
-│               │           │          │           │         ui         │
-│               │           │          │           │      primary       │
-│               │           │          │           │    loadbalancer    │
-│ db-server-01  │         8 │     5.12 │    3,200m │         db         │
-│               │           │          │           │        sql         │
-│               │           │          │           │      storage       │
-│               │           │          │           │      primary       │
-│               │           │          │           │      backend       │
-│ cache-server  │         2 │     0.85 │      500m │       cache        │
-│               │           │          │           │       redis        │
-│               │           │          │           │        fast        │
-│               │           │          │           │       memory       │
-│ api-gateway   │         6 │     3.21 │    2,100m │        api         │
-│               │           │          │           │      gateway       │
-│               │           │          │           │      routing       │
-│               │           │          │           │        web         │
-│               │           │          │           │     interface      │
-├───────────────┼───────────┼──────────┼───────────┼────────────────────┤
-│ 4             │        20 │     2.91 │    3,200m │                    │
-╰───────────────┴───────────┴──────────┴───────────┴────────────────────╯
-```
+
+
+![5-C output](images/5-C.svg)
 
 **What to look for**
 
@@ -365,9 +301,6 @@ the body many lines deep.
 ---
 
 ## 5-D — Right-aligned title over a broken table
-
-<!-- screenshot:5-D -->
-
 **What it demonstrates.** `"title_position": "right"`, and how a title sits above a table
 whose rows are separated into groups.
 
@@ -419,23 +352,9 @@ whose rows are separated into groups.
 
 **Output**
 
-```text
-                           ╭──────────────────────────────╮
-                           │ Server Inventory by Category │
-╭────┬──────────┬──────────┴────┬──────────┬──────────────┤
-│ ID │ Category │ Server Name   │  Status  │ Memory Usage │
-├────┼──────────┼───────────────┼──────────┼──────────────┤
-│  1 │ Web      │ web-server-01 │ Running  │       2,048M │
-├────┼──────────┼───────────────┼──────────┼──────────────┤
-│  2 │ Database │ db-server-01  │ Running  │       8,192M │
-├────┼──────────┼───────────────┼──────────┼──────────────┤
-│  3 │ Cache    │ cache-server  │ Starting │       1,024M │
-├────┼──────────┼───────────────┼──────────┼──────────────┤
-│  4 │ Web      │ api-gateway   │ Running  │       4,096M │
-├────┼──────────┼───────────────┼──────────┼──────────────┤
-│  4 │ 3        │               │          │      15,360M │
-╰────┴──────────┴───────────────┴──────────┴──────────────╯
-```
+
+
+![5-D output](images/5-D.svg)
 
 **What to look for**
 
@@ -454,9 +373,6 @@ whose rows are separated into groups.
 ---
 
 ## 5-E — A full-width title that overflows
-
-<!-- screenshot:5-E -->
-
 **What it demonstrates.** `"title_position": "full"` with a title longer than the table can
 hold — the clipping case.
 
@@ -517,28 +433,9 @@ hold — the clipping case.
 
 **Output**
 
-```text
-╭────────────────────────────────────────────────────────────────────────────────╮
-│ Enterprise Server Management System - Detailed Analytics and Performance Metri │
-├────┬───────────────┬──────────┬─────────────────────────┬───────────┬──────────┤
-│ ID │ Server Name   │ Category │             Description │ CPU Cores │ Load Avg │
-├────┼───────────────┼──────────┼─────────────────────────┼───────────┼──────────┤
-│  1 │ web-server-01 │   Web    │  Primary web server for │         4 │   2.45   │
-│    │               │          │   frontend applications │           │          │
-│    │               │          │  with a detailed setup. │           │          │
-│  2 │ db-server-01  │ Database │    Main database server │         8 │   5.12   │
-│    │               │          │  handling critical data │           │          │
-│    │               │          │             operations. │           │          │
-│  3 │ cache-server  │  Cache   │     In-memory cache for │         2 │   0.85   │
-│    │               │          │        speeding up data │           │          │
-│    │               │          │                 access. │           │          │
-│  4 │ api-gateway   │   Web    │    API gateway managing │         6 │   3.21   │
-│    │               │          │   incoming requests and │           │          │
-│    │               │          │                routing. │           │          │
-├────┼───────────────┼──────────┼─────────────────────────┼───────────┼──────────┤
-│  1 │ 4             │    3     │                         │         5 │   5.12   │
-╰────┴───────────────┴──────────┴─────────────────────────┴───────────┴──────────╯
-```
+
+
+![5-E output](images/5-E.svg)
 
 **What to look for**
 

@@ -75,7 +75,9 @@ The comparison normalizes only:
 
 ANSI color codes and separator geometry are **not** stripped. Both implementations must emit identical theme colors, placeholder expansions (`{RED}`, `{NC}`, …), color scoping (pad outside color; reset after content), and border/separator line lengths.
 
-**Bash is the reference implementation.** The Bash implementation (`tables.sh/tables.sh`) was the original variant created. All language implementations (C, future ports) are compared *against* the Bash output as the oracle — marked via `"reference": true` in `tests/implementations.json`. When adding a new language implementation, it should match the Bash output after normalization; the runner diffs every configured implementation against the reference automatically.
+**Bash is the reference implementation** for correctness. The Bash implementation (`tables.sh/tables.sh`) was the original variant created. All language implementations (C, future ports) are compared *against* the Bash output as the oracle — marked via `"reference": true` in `tests/implementations.json`. When adding a new language implementation, it should match the Bash output after normalization; the runner diffs every configured implementation against the reference automatically.
+
+**C is the performance baseline.** C must remain the fastest implementation — marked via `"baseline": true` in `tests/implementations.json`. The performance table reports every other implementation's time as a multiple of C's (`"<Name> / C"` columns) and uses C to render the table itself. If any implementation ever benchmarks faster than C on the full suite, that's a regression in C (or a candidate for a new baseline) worth investigating, not something to shrug off.
 
 ### CLI options
 

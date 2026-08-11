@@ -37,12 +37,18 @@ fi
 # Go, ... — is just a new entry in that file; nothing below needs to change.
 # One of the entries must be marked "reference": true (currently Bash, per
 # AGENTS.md: it is the oracle every other implementation is compared
-# against). See tests/README.md for the full schema.
+# against for correctness). One entry should be marked "baseline": true
+# (currently C: it's expected to remain the fastest implementation, so
+# every implementation's performance is reported relative to it, and it's
+# used to render the performance table itself). Reference and baseline are
+# independent — they happen to be different implementations today. See
+# tests/README.md for the full schema.
 # =============================================================================
 
-declare -a IMPL_ID IMPL_NAME IMPL_REFERENCE IMPL_RUN_TOKENS IMPL_TIMEOUT
+declare -a IMPL_ID IMPL_NAME IMPL_REFERENCE IMPL_BASELINE IMPL_RUN_TOKENS IMPL_TIMEOUT
 declare -a IMPL_LINT_NAME IMPL_LINT_TOKENS IMPL_LOC_PATH IMPL_LOC_LANGS
 REFERENCE_IDX=-1
+BASELINE_IDX=-1
 
 # First run token, with {PROJECT_ROOT} expanded, decides how an
 # implementation's availability is probed: an absolute path must be an
@@ -94,6 +100,7 @@ load_implementations() {
             .id,
             .name,
             ((.reference // false) | tostring),
+            ((.baseline // false) | tostring),
             (.run | join("\u001f")),
             ((.timeout // 30) | tostring),
             (.lint.name // ""),
@@ -107,9 +114,9 @@ load_implementations() {
     for line in "${lines[@]}"; do
         local -a f=()
         mapfile -t -d $'\t' f <<< "${line}"
-        f[8]="${f[8]%$'\n'}"
+        f[9]="${f[9]%$'\n'}"
 
-        if ! impl_available "${f[3]}"; then
+        if ! impl_available "${f[4]}"; then
             echo -e "${YELLOW}Warning: implementation '${f[1]}' unavailable, skipping${NC}" >&2
             continue
         fi
@@ -117,13 +124,15 @@ load_implementations() {
         IMPL_ID[idx]="${f[0]}"
         IMPL_NAME[idx]="${f[1]}"
         IMPL_REFERENCE[idx]="${f[2]}"
-        IMPL_RUN_TOKENS[idx]="${f[3]}"
-        IMPL_TIMEOUT[idx]="${f[4]}"
-        IMPL_LINT_NAME[idx]="${f[5]}"
-        IMPL_LINT_TOKENS[idx]="${f[6]}"
-        IMPL_LOC_PATH[idx]="${f[7]}"
-        IMPL_LOC_LANGS[idx]="${f[8]}"
+        IMPL_BASELINE[idx]="${f[3]}"
+        IMPL_RUN_TOKENS[idx]="${f[4]}"
+        IMPL_TIMEOUT[idx]="${f[5]}"
+        IMPL_LINT_NAME[idx]="${f[6]}"
+        IMPL_LINT_TOKENS[idx]="${f[7]}"
+        IMPL_LOC_PATH[idx]="${f[8]}"
+        IMPL_LOC_LANGS[idx]="${f[9]}"
         [[ "${IMPL_REFERENCE[idx]}" == "true" ]] && REFERENCE_IDX=${idx}
+        [[ "${IMPL_BASELINE[idx]}" == "true" ]] && BASELINE_IDX=${idx}
         idx=$((idx + 1))
     done
 
@@ -131,10 +140,37 @@ load_implementations() {
         echo "ERROR: no available implementation is marked \"reference\": true in ${IMPLEMENTATIONS_JSON}" >&2
         exit 1
     fi
+    if [[ ${BASELINE_IDX} -lt 0 ]]; then
+        # No implementation is unavailable/unmarked as baseline: fall back to
+        # the reference so the table/rendering still work, just without a
+        # meaningful performance baseline.
+        BASELINE_IDX=${REFERENCE_IDX}
+    fi
 }
 
 load_implementations
 IMPL_COUNT=${#IMPL_ID[@]}
+
+# Render the performance table itself with the fastest implementation
+# (baseline, i.e. C) rather than the reference (Bash), which is orders of
+# magnitude slower and would make `--results` (and the final table at the
+# end of every run) needlessly slow.
+render_table() {
+    local layout="$1" data="$2"
+    expand_cmd "${IMPL_RUN_TOKENS[${BASELINE_IDX}]}" "${layout}" "${data}" 0
+    if "${CMD_ARR[@]}"; then
+        return 0
+    fi
+    # Baseline failed/unavailable at runtime: fall back to any other
+    # available implementation so results are still shown.
+    local i
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        [[ $i -eq ${BASELINE_IDX} ]] && continue
+        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${layout}" "${data}" 0
+        "${CMD_ARR[@]}" && return 0
+    done
+    return 1
+}
 
 show_saved_results() {
     if [[ ! -f "${PERF_LAYOUT_JSON}" || ! -f "${PERF_DATA_JSON}" ]]; then
@@ -143,15 +179,8 @@ show_saved_results() {
         echo "  bash tests/run_tests.sh --results"
         exit 1
     fi
-    expand_cmd "${IMPL_RUN_TOKENS[${REFERENCE_IDX}]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
-    # Render with any available implementation; the reference is guaranteed present.
-    local i
-    for ((i=0; i<IMPL_COUNT; i++)); do
-        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
-        "${CMD_ARR[@]}" && exit 0
-    done
-    echo "ERROR: no available implementation to render results" >&2
-    exit 1
+    render_table "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}"
+    exit $?
 }
 
 # Parse flags; remaining args are suite filters
@@ -253,19 +282,15 @@ format_ms() {
     echo "$(format_int "$ms") ms"
 }
 
-# "N.Nx" spread between the largest and smallest of a list of integers
-# (used for the performance table's Spread column and the LOC row). Scales
-# to any number of implementations, unlike a fixed "A / B" ratio.
-ratio_spread() {
-    local -a vals=("$@")
-    [[ ${#vals[@]} -eq 0 ]] && { echo "—"; return; }
-    local min="${vals[0]}" max="${vals[0]}" v
-    for v in "${vals[@]}"; do
-        [[ $v -lt $min ]] && min=$v
-        [[ $v -gt $max ]] && max=$v
-    done
-    if [[ ${min} -gt 0 ]]; then
-        awk "BEGIN {printf \"%.1f x\", $max / $min}"
+# "N.Nx" ratio of one value against the baseline implementation's value
+# (used for the performance table's "<Name> / <Baseline>" columns and the
+# LOC row). C is the baseline: it's expected to remain the fastest
+# implementation, so every other implementation is reported as a multiple
+# of it.
+ratio_vs_baseline() {
+    local value="$1" baseline="$2"
+    if [[ ${baseline} -gt 0 ]]; then
+        awk "BEGIN {printf \"%.1f x\", $value / $baseline}"
     else
         echo "—"
     fi
@@ -652,15 +677,15 @@ if [[ -s "${PERF_FILE}" ]]; then
     PF_PASS="{GREEN}✓{NC}"
     PF_FAIL="{RED}✗{NC}"
 
-    # Build one jq row object per suite, with one t_<impl_id> field per
-    # implementation — constructed dynamically since the column count
-    # depends on how many implementations are configured/available.
+    # Build one jq row object per suite from arbitrary (key, value) pairs —
+    # constructed dynamically since the column count depends on how many
+    # implementations are configured/available.
     build_row() {
-        local group="$1" suite="$2" pf="$3" ratio="$4"; shift 4
-        local -a jq_args=(--arg group "$group" --arg suite "$suite" --arg pf "$pf" --arg ratio "$ratio")
-        local filter='{group:$group,suite:$suite,pf:$pf,ratio:$ratio'
+        local group="$1" suite="$2" pf="$3"; shift 3
+        local -a jq_args=(--arg group "$group" --arg suite "$suite" --arg pf "$pf")
+        local filter='{group:$group,suite:$suite,pf:$pf'
         while [[ $# -gt 0 ]]; do
-            local key="t_$1" val="$2"; shift 2
+            local key="$1" val="$2"; shift 2
             jq_args+=(--arg "$key" "$val")
             filter+=",${key}:\$${key}"
         done
@@ -668,10 +693,24 @@ if [[ -s "${PERF_FILE}" ]]; then
         jq -nc "${jq_args[@]}" "$filter"
     }
 
+    # Append one r_<id> ratio-vs-baseline pair per non-baseline implementation
+    # to the "pairs" array (a nameref target), given a parallel array of ms
+    # (or LOC) values indexed the same as IMPL_*.
+    append_ratio_pairs() {
+        local -n _pairs="$1"; shift
+        local -a vals=("$@")
+        local baseline_val="${vals[${BASELINE_IDX}]}"
+        local i
+        for ((i=0; i<IMPL_COUNT; i++)); do
+            [[ $i -eq ${BASELINE_IDX} ]] && continue
+            _pairs+=("r_${IMPL_ID[$i]}" "$(ratio_vs_baseline "${vals[$i]}" "${baseline_val}")")
+        done
+    }
+
     data_rows="["
     first=true
     while IFS=$'\t' read -r s name; do
-        row_ms=(); row_fmt_pairs=()
+        row_ms=(); pairs=()
         for ((i=0; i<IMPL_COUNT; i++)); do
             v="${SUITE_IMPL_MS["${s}|${IMPL_ID[$i]}"]:-0}"
             row_ms[i]="$v"
@@ -680,27 +719,26 @@ if [[ -s "${PERF_FILE}" ]]; then
 
         mapfile -t row_colored < <(colorize_timings "${row_ms[@]}")
         for ((i=0; i<IMPL_COUNT; i++)); do
-            row_fmt_pairs+=("${IMPL_ID[$i]}" "${row_colored[$i]}")
+            pairs+=("t_${IMPL_ID[$i]}" "${row_colored[$i]}")
         done
-
-        ratio=$(ratio_spread "${row_ms[@]}")
+        append_ratio_pairs pairs "${row_ms[@]}"
 
         if [[ ${SUITE_FAIL_COUNT[$s]:-0} -eq 0 ]]; then pf="$PF_PASS"; else pf="$PF_FAIL"; fi
 
         [[ "${first}" != "true" ]] && data_rows+=","
         first=false
-        data_rows+=$(build_row "suite" "$s $name" "$pf" "$ratio" "${row_fmt_pairs[@]}")
+        data_rows+=$(build_row "suite" "$s $name" "$pf" "${pairs[@]}")
     done < "${SUITE_NAMES_FILE}"
 
     mapfile -t total_colored < <(colorize_timings "${TOTAL_IMPL_MS[@]}")
     total_pairs=()
     for ((i=0; i<IMPL_COUNT; i++)); do
-        total_pairs+=("${IMPL_ID[$i]}" "${total_colored[$i]}")
+        total_pairs+=("t_${IMPL_ID[$i]}" "${total_colored[$i]}")
     done
-    total_ratio=$(ratio_spread "${TOTAL_IMPL_MS[@]}")
+    append_ratio_pairs total_pairs "${TOTAL_IMPL_MS[@]}"
     if [[ $fail_count -eq 0 ]]; then total_pf="$PF_PASS"; else total_pf="$PF_FAIL"; fi
     data_rows+=","
-    data_rows+=$(build_row "total" "Total" "$total_pf" "$total_ratio" "${total_pairs[@]}")
+    data_rows+=$(build_row "total" "Total" "$total_pf" "${total_pairs[@]}")
 
     # Informational annotated LOC row (excluded from any future summary math)
     declare -a loc_vals=()
@@ -713,11 +751,11 @@ if [[ -s "${PERF_FILE}" ]]; then
         mapfile -t loc_colored < <(colorize_counts "${loc_vals[@]}")
         loc_pairs=()
         for ((i=0; i<IMPL_COUNT; i++)); do
-            loc_pairs+=("${IMPL_ID[$i]}" "${loc_colored[$i]}")
+            loc_pairs+=("t_${IMPL_ID[$i]}" "${loc_colored[$i]}")
         done
-        loc_ratio=$(ratio_spread "${loc_vals[@]}")
+        append_ratio_pairs loc_pairs "${loc_vals[@]}"
         data_rows+=","
-        data_rows+=$(build_row "loc" "Lines of Code" "" "$loc_ratio" "${loc_pairs[@]}")
+        data_rows+=$(build_row "loc" "Lines of Code" "" "${loc_pairs[@]}")
     fi
 
     data_rows+="]"
@@ -732,11 +770,18 @@ if [[ -s "${PERF_FILE}" ]]; then
 
     wall_fmt=$(format_ms "$SUITE_WALL_MS")
 
-    # Build the columns array dynamically: Suite, P/F, one column per
-    # implementation (in registry order), Spread, then a hidden break column.
+    # Build the columns array dynamically: Suite, P/F, one time column per
+    # implementation (in registry order), one "<Name> / <Baseline>" ratio
+    # column per non-baseline implementation, then a hidden break column.
+    baseline_name="${IMPL_NAME[${BASELINE_IDX}]}"
     impl_columns=""
     for ((i=0; i<IMPL_COUNT; i++)); do
         impl_columns+="    {\"header\": \"${IMPL_NAME[$i]}\", \"key\": \"t_${IMPL_ID[$i]}\", \"datatype\": \"text\", \"justification\": \"right\"},"$'\n'
+    done
+    ratio_columns=""
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        [[ $i -eq ${BASELINE_IDX} ]] && continue
+        ratio_columns+="    {\"header\": \"${IMPL_NAME[$i]} / ${baseline_name}\", \"key\": \"r_${IMPL_ID[$i]}\", \"datatype\": \"text\", \"justification\": \"right\"},"$'\n'
     done
 
     cat > "${perf_layout_tmp}" << LAYOUT
@@ -747,8 +792,7 @@ if [[ -s "${PERF_FILE}" ]]; then
   "columns": [
     {"header": "Suite", "key": "suite", "datatype": "text", "justification": "left"},
     {"header": "P/F", "key": "pf", "datatype": "text", "justification": "center"},
-${impl_columns}    {"header": "Spread", "key": "ratio", "datatype": "text", "justification": "right"},
-    {"header": "group", "key": "group", "datatype": "text", "justification": "left", "visible": false, "break": true}
+${impl_columns}${ratio_columns}    {"header": "group", "key": "group", "datatype": "text", "justification": "left", "visible": false, "break": true}
   ],
   "footer": "Test Suite Execution Time: {BOLD}{WHITE}${wall_fmt}{NC}",
   "footer_position": "center"
@@ -757,8 +801,7 @@ LAYOUT
     mv -f "${perf_layout_tmp}" "${PERF_LAYOUT_JSON}"
 
     echo ""
-    expand_cmd "${IMPL_RUN_TOKENS[${REFERENCE_IDX}]}" "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 0
-    "${CMD_ARR[@]}" 2>/dev/null || true
+    render_table "${PERF_LAYOUT_JSON}" "${PERF_DATA_JSON}" 2>/dev/null || true
 fi
 
 exit $fail_count
