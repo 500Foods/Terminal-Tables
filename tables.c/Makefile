@@ -2,7 +2,7 @@
 CC = gcc
 # Aggressive optimization flags for smallest binary
 CFLAGS = -Wall -Wextra -Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-unwind-tables -s $(shell pkg-config --cflags jansson)
-LDFLAGS = -Wl,--gc-sections -Wl,--strip-all $(shell pkg-config --libs jansson)
+LDFLAGS = -Wl,--gc-sections -Wl,--strip-all $(shell pkg-config --libs jansson) -lm
 TARGET = tables
 SOURCES = *.c
 

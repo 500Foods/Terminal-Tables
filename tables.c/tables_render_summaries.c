@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "tables_render_summaries.h"
 #include "tables_render_utils.h"
 
@@ -104,8 +105,11 @@ void render_summaries(TableConfig *config, TableData *data) {
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                         summary_text[sizeof(summary_text) - 1] = '\0';
                         free(formatted);
-                    } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
-                        /* Integer sum: format with comma separators */
+                    } else if (col->data_type == DATA_INT) {
+                        /* Integer sum: raw value, no comma separators */
+                        snprintf(summary_text, sizeof(summary_text), "%.0f", stats->sum);
+                    } else if (col->data_type == DATA_NUM) {
+                        /* Num sum: format with comma separators */
                         snprintf(summary_text, sizeof(summary_text), "%.0f", stats->sum);
                         char *formatted = format_with_commas(summary_text);
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
@@ -145,7 +149,9 @@ void render_summaries(TableConfig *config, TableData *data) {
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                         summary_text[sizeof(summary_text) - 1] = '\0';
                         free(formatted);
-                    } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
+                    } else if (col->data_type == DATA_INT) {
+                        snprintf(summary_text, sizeof(summary_text), "%.0f", stats->min);
+                    } else if (col->data_type == DATA_NUM) {
                         snprintf(summary_text, sizeof(summary_text), "%.0f", stats->min);
                         char *formatted = format_with_commas(summary_text);
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
@@ -184,7 +190,9 @@ void render_summaries(TableConfig *config, TableData *data) {
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                         summary_text[sizeof(summary_text) - 1] = '\0';
                         free(formatted);
-                    } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
+                    } else if (col->data_type == DATA_INT) {
+                        snprintf(summary_text, sizeof(summary_text), "%.0f", stats->max);
+                    } else if (col->data_type == DATA_NUM) {
                         snprintf(summary_text, sizeof(summary_text), "%.0f", stats->max);
                         char *formatted = format_with_commas(summary_text);
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
@@ -212,13 +220,20 @@ void render_summaries(TableConfig *config, TableData *data) {
                         if (col->data_type == DATA_FLOAT) {
                             char format[16];
                             snprintf(format, sizeof(format), "%%.%df", stats->max_decimal_places);
-                            snprintf(summary_text, sizeof(summary_text), format, avg_result);
+                            /* Explicit round-half-up, epsilon-guarded against binary
+                             * floating-point representation noise, so the result does
+                             * not depend on which side of a tie the raw double lands on. */
+                            double scale = pow(10, stats->max_decimal_places);
+                            double rounded_avg = floor(avg_result * scale + 0.5 + 1e-9) / scale;
+                            snprintf(summary_text, sizeof(summary_text), format, rounded_avg);
                             char *formatted = format_with_commas(summary_text);
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                             summary_text[sizeof(summary_text) - 1] = '\0';
                             free(formatted);
-                        } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
-                            snprintf(summary_text, sizeof(summary_text), "%.0f", avg_result);
+                        } else if (col->data_type == DATA_INT) {
+                            snprintf(summary_text, sizeof(summary_text), "%.0f", floor(avg_result + 0.5 + 1e-9));
+                        } else if (col->data_type == DATA_NUM) {
+                            snprintf(summary_text, sizeof(summary_text), "%.0f", floor(avg_result + 0.5 + 1e-9));
                             char *formatted = format_with_commas(summary_text);
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                             summary_text[sizeof(summary_text) - 1] = '\0';

@@ -43,7 +43,7 @@ declare -g THEME_NAME="Red"        # active theme name
 # Spaces on each side of cell content
 declare -g DEFAULT_PADDING=1       # spaces on each side of cell content
 # Version string for --version output
-declare -g TABLES_VERSION="3.0.0"  # --version / tables_version
+declare -g TABLES_VERSION="3.0.1"  # --version / tables_version
 # When 1, --mono flag suppresses all ANSI colors
 declare -g MONO_MODE=0             # --mono: suppress all ANSI colors
 
@@ -1138,15 +1138,21 @@ format_summary_value() {
                 if [[ "${datatype}" == "float" ]]; then
                     local decimals=${MAX_DECIMAL_PLACES[${j}]:-2}
                     local avg_result
-                    avg_result=$(awk "BEGIN {printf \"%.${decimals}f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
+                    # Explicit round-half-up, epsilon-guarded against binary floating-point
+                    # representation noise, so the result does not depend on which side of
+                    # a tie the raw double happens to land on (matches the C implementation).
+                    avg_result=$(awk -v s="${AVG_SUMMARIES[${j}]}" -v c="${AVG_COUNTS[${j}]}" -v d="${decimals}" \
+                        'BEGIN { scale = 10^d; printf "%.*f", d, (int((s/c)*scale + 0.5 + 1e-9)) / scale }')
                     summary_value=$(format_with_commas "${avg_result}")
                  elif [[ "${datatype}" == "int" ]]; then
                      local avg_result
-                     avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
+                     avg_result=$(awk -v s="${AVG_SUMMARIES[${j}]}" -v c="${AVG_COUNTS[${j}]}" \
+                         'BEGIN { printf "%.0f", int((s/c) + 0.5 + 1e-9) }')
                      summary_value="${avg_result}"
                 elif [[ "${datatype}" == "num" ]]; then
                     local avg_result
-                    avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
+                    avg_result=$(awk -v s="${AVG_SUMMARIES[${j}]}" -v c="${AVG_COUNTS[${j}]}" \
+                        'BEGIN { printf "%.0f", int((s/c) + 0.5 + 1e-9) }')
                     summary_value=$(format_num "${avg_result}" "${format}")
                 else
                     summary_value="$((${AVG_SUMMARIES[${j}]} / ${AVG_COUNTS[${j}]}))"

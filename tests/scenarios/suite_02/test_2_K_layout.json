@@ -1,0 +1,18 @@
+{
+  "columns": [
+    {
+      "header": "Int Value",
+      "key": "int_val",
+      "datatype": "int",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Float Value",
+      "key": "float_val",
+      "datatype": "float",
+      "justification": "right",
+      "summary": "avg"
+    }
+  ]
+}

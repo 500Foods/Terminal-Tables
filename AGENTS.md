@@ -57,7 +57,7 @@ To add a new test case, create a new `_data.json` and `_layout.json` pair in the
 |-------|-------------|-----------|
 | 00 | Linting (shellcheck + cppcheck) | 1 |
 | 01 | Basic datatypes and justifications | 10 |
-| 02 | Sum, min, max, avg, count, summaries | 10 |
+| 02 | Sum, min, max, avg, count, summaries | 11 |
 | 03 | Text wrapping modes | 11 |
 | 04 | Complex tables with mixed features | 5 |
 | 05 | Title rendering and positioning | 5 |
@@ -66,7 +66,7 @@ To add a new test case, create a new `_data.json` and `_layout.json` pair in the
 | 08 | Footer position clipping | 17 |
 | 09 | Showcase with multiple tables | 22 |
 
-Total: 98 test cases (97 comparison + 1 lint)
+Total: 99 test cases (98 comparison + 1 lint)
 
 ### Normalization
 
