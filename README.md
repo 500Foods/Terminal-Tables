@@ -1,6 +1,8 @@
 # Terminal Tables
 
-This is a tool (with both C and Bash versions) for drawing nice ANSI tables in the terminal. By passing in JSON for the layout, and separately JSON for the data, a table is generated that can include titles, footers, column headers, break lines, summary calculations and more.
+This is a tool (with implementations in several langauges) for drawing nice ANSI tables in the terminal. By passing in JSON for the layout, and separately JSON for the data, a table is generated that can include titles, footers, column headers, break lines, summary calculations and more.
+
+Log output, build system status, general console dashboard displays, and much more become far more readable and pleasant to look at. No more scanning through cryptic logs - exceptions become more visible and consistent output looks a lot nicer, particuarly when that's what you're looking at all day long!
 
 <img width="500" alt="example table" src="https://github.com/user-attachments/assets/8aab5c1b-2784-4288-8112-a58c5ee501f8" />  
 
