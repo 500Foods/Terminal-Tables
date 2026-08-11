@@ -183,17 +183,22 @@ show_saved_results() {
     exit $?
 }
 
-# Parse flags; remaining args are suite filters
+# Parse flags; remaining args are suite filters (or test labels, e.g. "9-V")
 SUITES=()
+SHOW_LABELS=()
+SHOW_MONO=0
 if [[ -z "${JOB_WORKER_MODE}" ]]; then
     for arg in "$@"; do
         case "${arg}" in
             --results|-r)
                 show_saved_results
                 ;;
+            --mono)
+                SHOW_MONO=1
+                ;;
             --help|-h)
                 cat <<'USAGE'
-Usage: run_tests.sh [OPTIONS] [SUITE ...]
+Usage: run_tests.sh [OPTIONS] [SUITE ... | LABEL ...]
 
   Run comparison tests for the given suites (default: 00–09).
 
@@ -202,14 +207,23 @@ Usage: run_tests.sh [OPTIONS] [SUITE ...]
   new language by adding an entry there; this script does not hard-code
   any particular language.
 
+  Passing one or more specific test labels (containing a dash, e.g.
+  "9-V") instead of suite numbers switches to "show" mode: instead of
+  the normal pass/fail comparison and performance table, it prints that
+  scenario's actual rendered output from every configured implementation
+  side by side, so you can eyeball what "9-V" looks like in C vs. Bash.
+
 Options:
   --results, -r   Re-display the performance table from the last run
+  --mono          In show mode, render with --mono instead of colors
   --help, -h      Show this help
 
 Examples:
   bash tests/run_tests.sh
   bash tests/run_tests.sh 01 04
   bash tests/run_tests.sh --results
+  bash tests/run_tests.sh 9-V
+  bash tests/run_tests.sh 9-V 5-A --mono
 USAGE
                 exit 0
                 ;;
@@ -218,7 +232,11 @@ USAGE
                 exit 1
                 ;;
             *)
-                SUITES+=("${arg}")
+                if [[ "${arg}" == *-* ]]; then
+                    SHOW_LABELS+=("${arg}")
+                else
+                    SUITES+=("${arg}")
+                fi
                 ;;
         esac
     done
@@ -508,6 +526,64 @@ run_scenario() {
     done
     return 1
 }
+
+# Show mode: given a specific test label (e.g. "9-V", detected by the
+# presence of a dash in a positional arg), print that scenario's actual
+# rendered output from every configured implementation, one after another,
+# instead of running the normal pass/fail comparison + performance table.
+# Useful for eyeballing "what does 9-V look like in C vs. Bash?".
+show_single_label() {
+    local label="$1"
+    local match suite
+    match=$(jq -r --arg label "${label}" '.[] | select(.label == $label) | .suite' "${MANIFEST}")
+    if [[ -z "${match}" ]]; then
+        echo -e "${RED}No scenario found for test '${label}' (check tests/scenarios/manifest.json)${NC}" >&2
+        return 1
+    fi
+    suite=$(echo "${match}" | head -1)
+
+    local suite_dir="$SCENARIOS_DIR/suite_${suite}"
+    local scenario_name="test_$(echo "${label}" | sed 's/-/_/')"
+    local data_file layout_file
+    data_file=$(ls "$suite_dir/${scenario_name}_data".* 2>/dev/null | head -1)
+    layout_file=$(ls "$suite_dir/${scenario_name}_layout".* 2>/dev/null | head -1)
+
+    if [[ -z "${data_file}" || -z "${layout_file}" ]]; then
+        echo -e "${RED}Scenario files not found for '${label}' in ${suite_dir}${NC}" >&2
+        return 1
+    fi
+
+    local tmp_data tmp_layout
+    tmp_data=$(mktemp)
+    tmp_layout=$(mktemp)
+    resolve_file "$data_file" > "$tmp_data"
+    if [[ "$layout_file" == *.sh ]]; then
+        resolve_file "$layout_file" "$tmp_data" > "$tmp_layout"
+    else
+        resolve_file "$layout_file" > "$tmp_layout"
+    fi
+
+    echo -e "${YELLOW}=== Test ${label} (suite ${suite}) ===${NC}"
+    local i
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        echo ""
+        echo -e "${YELLOW}--- ${IMPL_NAME[$i]} ---${NC}"
+        expand_cmd "${IMPL_RUN_TOKENS[$i]}" "${tmp_layout}" "${tmp_data}" "${SHOW_MONO}"
+        timeout "${IMPL_TIMEOUT[$i]}" "${CMD_ARR[@]}"
+    done
+    echo ""
+
+    rm -f "$tmp_data" "$tmp_layout"
+    return 0
+}
+
+if [[ -z "${JOB_WORKER_MODE}" && ${#SHOW_LABELS[@]} -gt 0 ]]; then
+    show_rc=0
+    for label in "${SHOW_LABELS[@]}"; do
+        show_single_label "${label}" || show_rc=1
+    done
+    exit ${show_rc}
+fi
 
 # Worker entry point: invoked as a fresh `bash` process (one per xargs slot)
 # so scenarios run concurrently. Each worker gets its own tmp files under a

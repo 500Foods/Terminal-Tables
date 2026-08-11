@@ -56,7 +56,7 @@ To add a new test case, create a new `_data.json` and `_layout.json` pair in the
 | Suite | Description | Sub-tests |
 |-------|-------------|-----------|
 | 00 | Linting (shellcheck + cppcheck) | 1 |
-| 01 | Basic datatypes and justifications | 9 |
+| 01 | Basic datatypes and justifications | 10 |
 | 02 | Sum, min, max, avg, count, summaries | 10 |
 | 03 | Text wrapping modes | 11 |
 | 04 | Complex tables with mixed features | 5 |
@@ -66,7 +66,7 @@ To add a new test case, create a new `_data.json` and `_layout.json` pair in the
 | 08 | Footer position clipping | 17 |
 | 09 | Showcase with multiple tables | 22 |
 
-Total: 97 test cases (96 comparison + 1 lint)
+Total: 98 test cases (97 comparison + 1 lint)
 
 ### Normalization
 
@@ -86,17 +86,10 @@ All implementations are expected to accept:
 - `--help` / `-h`, `--version`
 - C only: `--debug`, `--debug_layout`
 
+**Note on datatypes:** `int` values render without thousands separators (e.g., `1234`); `num` values render with separators (e.g., `1,234`); `float` values render with decimal precision and separators. The summary row respects the same distinction.
+
 ### Known Issues
 
 - The Bash implementation is slower than C (~0.5-2s per table) due to `jq` subprocess calls
 - Test suite 08 (17 sub-tests) and 09 (22 sub-tests) take 30-60 seconds in Bash
 - Per-implementation timeouts are configured in `tests/implementations.json` (currently 120s for Bash, 10s for C)
-
-## Bash Bugs Fixed
-
-1. **Trailing newline in TSV parsing** — `jq` output had trailing `\n` in values
-2. **Integer avg truncation** — replaced `/` with rounding
-3. **Missing `local datatype`** in `render_data_rows`
-4. **Float zero-value detection** — `"0.0"` not matched by `"0"` check
-5. **Empty field collapsing** in TSV parsing — used `mapfile -d` instead of `read -ra`
-6. **Title/footer pre-clipping** — matches C's two-step clip behavior

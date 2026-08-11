@@ -22,7 +22,7 @@
 #include "tables_render.h"
 
 /* Version string for the tables utility */
-#define VERSION "1.0.1"
+#define VERSION "3.0.0"
 
 /* Function prototypes */
 void print_help(void);

@@ -43,7 +43,7 @@ declare -g THEME_NAME="Red"        # active theme name
 # Spaces on each side of cell content
 declare -g DEFAULT_PADDING=1       # spaces on each side of cell content
 # Version string for --version output
-declare -g TABLES_VERSION="1.0.0"  # --version / tables_version
+declare -g TABLES_VERSION="3.0.0"  # --version / tables_version
 # When 1, --mono flag suppresses all ANSI colors
 declare -g MONO_MODE=0             # --mono: suppress all ANSI colors
 
@@ -267,6 +267,32 @@ get_theme() {
 #   • Many CJK / emoji codepoints take two columns
 # Matches the C port so both engines size columns identically.
 
+# Companion to the two broad emoji ranges in get_display_length: codepoints
+# that default to emoji presentation (Emoji_Presentation=Yes in Unicode's
+# emoji-data.txt) despite living in the "Dingbats"/"Miscellaneous Symbols"
+# blocks alongside narrow, text-presentation punctuation. Narrow marks like
+# the plain CHECK MARK (U+2713) intentionally stay excluded so they keep
+# their real (single) column width. Matches the C port's is_wide_symbol().
+is_wide_symbol() {
+    case "$1" in
+        9989) return 0 ;;                     # 0x2705 ✅
+        9992|9993|9994|9995) return 0 ;;       # 0x2708-0x270B ✈✉✊✋
+        10024) return 0 ;;                     # 0x2728 ✨
+        10060|10062) return 0 ;;               # 0x274C 0x274E ❌❎
+        10067|10068|10069) return 0 ;;         # 0x2753-0x2755 ❓❔❕
+        10071) return 0 ;;                     # 0x2757 ❗
+        10083|10084) return 0 ;;               # 0x2763 0x2764 ❣❤
+        10133|10134|10135) return 0 ;;         # 0x2795-0x2797 ➕➖➗
+        10145) return 0 ;;                     # 0x27A1 ➡
+        10160) return 0 ;;                     # 0x27B0 ➰
+        10175) return 0 ;;                     # 0x27BF ➿
+        11035|11036) return 0 ;;               # 0x2B1B 0x2B1C ⬛⬜
+        11088) return 0 ;;                     # 0x2B50 ⭐
+        11093) return 0 ;;                     # 0x2B55 ⭕
+        *) return 1 ;;
+    esac
+}
+
 get_display_length() {
     local text="$1"
     local clean_text="${text}"
@@ -312,7 +338,7 @@ get_display_length() {
             if [[ $((i + 6)) -le ${len} ]]; then
                 local byte2_hex="${codepoints:$((i+2)):2}" byte3_hex="${codepoints:$((i+4)):2}"
                 local codepoint=$(( (byte1 & 0x0F) << 12 | (0x${byte2_hex} & 0x3F) << 6 | (0x${byte3_hex} & 0x3F) ))
-                if [[ ${codepoint} -ge 127744 && ${codepoint} -le 129535 ]] || [[ ${codepoint} -ge 9728 && ${codepoint} -le 9983 ]]; then ((width += 2)); else ((width++)); fi
+                if [[ ${codepoint} -ge 127744 && ${codepoint} -le 129535 ]] || [[ ${codepoint} -ge 9728 && ${codepoint} -le 9983 ]] || is_wide_symbol "${codepoint}"; then ((width += 2)); else ((width++)); fi
                 ((i += 6))
             else ((width++)); ((i += 2)); fi
         else

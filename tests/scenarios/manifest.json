@@ -74,16 +74,25 @@
   {
     "suite": "01",
     "suite_name": "basic",
-    "label": "1-I",
-    "data_file": "test_1_I_data.json",
-    "layout_file": "test_1_I_layout.json",
-    "data_dynamic": false,
-    "layout_dynamic": false
-  },
-  {
-    "suite": "02",
-    "suite_name": "summary",
-    "label": "2-A",
+     "label": "1-I",
+     "data_file": "test_1_I_data.json",
+     "layout_file": "test_1_I_layout.json",
+     "data_dynamic": false,
+     "layout_dynamic": false
+   },
+   {
+     "suite": "01",
+     "suite_name": "basic",
+     "label": "1-J",
+     "data_file": "test_1_J_data.json",
+     "layout_file": "test_1_J_layout.json",
+     "data_dynamic": false,
+     "layout_dynamic": false
+   },
+   {
+     "suite": "02",
+     "suite_name": "summary",
+     "label": "2-A",
     "data_file": "test_2_A_data.json",
     "layout_file": "test_2_A_layout.json",
     "data_dynamic": false,

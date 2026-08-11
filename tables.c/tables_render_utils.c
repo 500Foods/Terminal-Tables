@@ -25,6 +25,32 @@ char *strdup_safe(const char *str) {
 }
 
 /*
+ * Codepoints outside the two broad emoji ranges below that still render as
+ * double-width because they default to emoji presentation
+ * (Emoji_Presentation=Yes in Unicode's emoji-data.txt) despite living in the
+ * "Dingbats"/"Miscellaneous Symbols" blocks alongside narrow, text-presentation
+ * punctuation. Narrow marks like the plain CHECK MARK (U+2713) intentionally
+ * stay excluded so they keep their real (single) column width.
+ */
+static int is_wide_symbol(int codepoint) {
+    if (codepoint == 0x2705) return 1;                        /* ✅ */
+    if (codepoint >= 0x2708 && codepoint <= 0x270B) return 1;  /* ✈✉✊✋ */
+    if (codepoint == 0x2728) return 1;                         /* ✨ */
+    if (codepoint == 0x274C || codepoint == 0x274E) return 1;  /* ❌❎ */
+    if (codepoint >= 0x2753 && codepoint <= 0x2755) return 1;  /* ❓❔❕ */
+    if (codepoint == 0x2757) return 1;                         /* ❗ */
+    if (codepoint == 0x2763 || codepoint == 0x2764) return 1;  /* ❣❤ */
+    if (codepoint >= 0x2795 && codepoint <= 0x2797) return 1;  /* ➕➖➗ */
+    if (codepoint == 0x27A1) return 1;                         /* ➡ */
+    if (codepoint == 0x27B0) return 1;                         /* ➰ */
+    if (codepoint == 0x27BF) return 1;                         /* ➿ */
+    if (codepoint >= 0x2B1B && codepoint <= 0x2B1C) return 1;  /* ⬛⬜ */
+    if (codepoint == 0x2B50) return 1;                         /* ⭐ */
+    if (codepoint == 0x2B55) return 1;                         /* ⭕ */
+    return 0;
+}
+
+/*
  * Calculate display width of text, accounting for ANSI escape codes (which don't take up visible space)
  * This implementation matches the Bash version's logic exactly
  */
@@ -102,9 +128,11 @@ int get_display_width(const char *text) {
                 int codepoint = ((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F);
                 
                 // More precise emoji ranges - exclude single-width symbols like checkmarks
-                // Emoji ranges: 127744-129535 (main emoji block) and 9728-9983 (dingbats, excluding checkmarks)
+                // Emoji ranges: 127744-129535 (main emoji block) and 9728-9983 (dingbats, excluding checkmarks),
+                // plus the scattered wide-presentation symbols handled by is_wide_symbol().
                 if ((codepoint >= 127744 && codepoint <= 129535) ||
-                    (codepoint >= 9728 && codepoint <= 9983)) {
+                    (codepoint >= 9728 && codepoint <= 9983) ||
+                    is_wide_symbol(codepoint)) {
                     width += 2;
                 } else {
                     width++;

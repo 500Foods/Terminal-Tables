@@ -1,24 +1,33 @@
 # Tables
 
-A flexible utility for rendering JSON data as ANSI tables in terminal output. Tables.sh provides a powerful way to visualize structured data with customizable formatting, data processing, and display options.
+A flexible utility for rendering JSON data as ANSI tables in terminal output. Available in two implementations:
+
+- **Bash** (`tables.sh/tables.sh`): The reference implementation, using `jq` for JSON parsing
+- **C** (`tables.c/tables`): Performance-optimized binary, compiled from C source with `libjansson`
+
+Both implementations produce identical output (after timestamp normalization) and support the same features.
 
 ## Overview
 
 Tables.sh converts JSON data into beautifully formatted ANSI tables with the following features:
 
 - Multiple visual themes with colored borders and distinct element colors
-- Support for various data types (text, numbers, Kubernetes CPU/memory values)
-- Customizable column configurations (headers, alignment, formatting, width)
+- Support for various data types (text, int, num, float, Kubernetes CPU/memory values)
+- Customizable column configurations (headers, alignment, formatting, width, visibility)
 - Data processing capabilities (sorting, validation, summaries calculation)
 - Text wrapping and custom display options for null/zero values
 - Title and footer support with flexible positioning
-- Thousands separator formatting for numeric data
-- Option to hide specific columns using visibility settings
+- Thousands separator formatting for `num` and `float` types (int types are raw)
+- `--mono` flag to disable all ANSI colors for monochrome environments
 
 ## Usage
 
+Both implementations share the same CLI interface:
+
 ```bash
 ./tables.sh <layout_json_file> <data_json_file> [OPTIONS]
+# or
+./tables <layout_json_file> <data_json_file> [OPTIONS]
 ```
 
 ### Parameters
@@ -37,16 +46,16 @@ Tables.sh converts JSON data into beautifully formatted ANSI tables with the fol
 
 ```bash
 # Basic table rendering
-./tables.sh layout.json data.json
+./tables layout.json data.json
 
 # Monochrome output (no ANSI colors)
-./tables.sh layout.json data.json --mono
+./tables layout.json data.json --mono
 
 # Show version
-./tables.sh --version
+./tables --version
 
 # Show help
-./tables.sh --help
+./tables --help
 ```
 
 ## Layout JSON Structure
@@ -103,7 +112,7 @@ Each theme includes specific colors for:
 
 #### Detailed Theme Information
 
-The Tables Themes Library provides a comprehensive theme system for the `tables.sh` framework, managing visual appearance with customizable themes that define colors and ASCII characters for all table elements.
+Each theme defines ANSI color codes and Unicode box-drawing characters for all table elements:
 
 ##### Key Features
 
@@ -111,12 +120,11 @@ The Tables Themes Library provides a comprehensive theme system for the `tables.
 - **Color Management**: ANSI color codes for different elements
 - **Unicode Characters**: Box-drawing characters for professional appearance
 - **Theme Switching**: Dynamic theme changes during runtime
-- **Extensible Design**: Easy to add new themes
 
 ##### Available Themes
 
-- **Red Theme**: Uses red borders (`\033[0;31m`), with Cyan captions and footers (`\033[0;36m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
-- **Blue Theme**: Uses blue borders (`\033[0;34m`), with Cyan captions and footers (`\033[0;36m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
+- **Red Theme**: Uses red borders (`\033[0;31m`), with cyan captions and footers (`\033[0;36m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
+- **Blue Theme**: Uses blue borders (`\033[0;34m`), with blue captions and footers (`\033[0;34m`), Bright White headers and summaries (`\033[1;37m`), and default text color.
 
 ##### Theme Structure
 
@@ -124,11 +132,11 @@ Each theme is defined as an associative array with color elements (border, capti
 
 ##### Functions
 
-- **get_theme**: Updates the active theme based on the theme name ("Red" or "Blue"). It supports case-insensitive names and falls back to Red for unknown themes.
+- **get_theme**: Updates the active theme based on the theme name ("Red" or "Blue"). Unknown themes fall back to Red.
 
 ##### Extending Themes
 
-Users can define new themes by creating new associative arrays with custom color schemes and updating the `get_theme` function to recognize the new theme.
+New themes can be added by defining new associative arrays with custom color schemes and updating the `get_theme` function to recognize the new theme.
 
 ### Title and Footer Support
 
@@ -217,48 +225,58 @@ Text data with optional wrapping and length limits.
 - **Formatting**: Raw text with enhanced clipping and wrapping options
 - **Summary Types**: `count`, `unique`
 
-### int / float
+### int
 
-Integer or floating-point numbers.
+Integer numbers rendered as raw digits without thousands separators.
 
 - **Validation**: Any valid number
-- **Formatting**: Raw number or custom format string
-- **Summary Types**: `sum`, `min`, `max`, `count`, `unique`
+- **Formatting**: Raw number (e.g., `1234` — no comma separators)
+- **Summary Types**: `sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`
+
+### float
+
+Floating-point numbers with decimal precision and thousands separators.
+
+- **Validation**: Any valid number
+- **Formatting**: Numbers formatted with thousands separators and decimals (e.g., `1,234.50`)
+- **Summary Types**: `sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`
 
 ### num
 
 Numeric values with thousands separator formatting.
 
 - **Validation**: Any valid number
-- **Formatting**: Numbers formatted with thousands separators (e.g., "1,234")
-- **Summary Types**: `sum`, `min`, `max`, `count`, `unique`
+- **Formatting**: Numbers formatted with thousands separators (e.g., `1,234`)
+- **Summary Types**: `sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`
 
 ### kcpu
 
 Kubernetes-style CPU values (e.g., `100m` for 100 millicores).
 
 - **Validation**: Values with `m` suffix or numeric values
-- **Formatting**: Always with `m` suffix and thousands separators
-- **Summary Types**: `sum`, `count`
+- **Formatting**: Thousands separators and `m` suffix (e.g., `1,250m`)
+- **Summary Types**: `sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`
 
 ### kmem
 
 Kubernetes-style memory values (e.g., `128M`, `1G`, `512Ki`).
 
 - **Validation**: Values with `K`, `M`, `G`, `Ki`, `Mi`, `Gi` suffixes
-- **Formatting**: Normalized to `K`, `M`, or `G` format with thousands separators
-- **Summary Types**: `sum`, `count`
+- **Formatting**: Normalized to `K`/`M`/`G` (or `Ki`/`Mi`/`Gi`) format with thousands separators
+- **Summary Types**: `sum`, `min`, `max`, `avg`, `count`, `unique`, `blanks`, `nonblanks`
 
 ## Summary Types
 
 Depending on the data type, the following summary calculations are available:
 
 - `sum`: Sum of all values (numeric types, kcpu, kmem)
-- `min`: Minimum value (numeric types)
-- `max`: Maximum value (numeric types)
-- `avg`: Average value (numeric types)
+- `min`: Minimum value (numeric types, kcpu, kmem)
+- `max`: Maximum value (numeric types, kcpu, kmem)
+- `avg`: Average value (numeric types, kcpu, kmem)
 - `count`: Count of non-null values (all types)
 - `unique`: Count of unique values (all types)
+- `blanks`: Count of blank/null values (all types)
+- `nonblanks`: Count of non-blank values (all types)
 - `none`: No summary (default)
 
 ## Example Tables
@@ -316,7 +334,7 @@ This example renders a table of Kubernetes pod information:
 **Command:**
 
 ```bash
-./tables.sh layout.json data.json
+./tables layout.json data.json
 ```
 
 **Output:**
@@ -343,7 +361,7 @@ This example demonstrates more features, including titles, footers, sorting, and
   "theme": "Blue",
   "title": "Pod Resource Usage Report",
   "title_position": "center",
-  "footer": "Generated by tables.sh",
+  "footer": "Generated by tables",
   "footer_position": "right",
   "sort": [
     {"key": "namespace", "direction": "asc", "priority": 1},
@@ -526,14 +544,14 @@ This example shows how to use the `visible: false` property to hide a column fro
 
 In this example, the "Hidden Data" column is not displayed in the table output, even though the data is present in the JSON file.
 
-## Using in Scripts (New Feature)
+## Using in Scripts
 
-A powerful new feature in `tables.sh` allows you to source the script directly in your own scripts and call its functions to render tables programmatically. This enables seamless integration into your workflows:
+The Bash implementation can be sourced directly in your own scripts to render tables programmatically:
 
 ```bash
 #!/usr/bin/env bash
 
-# Source table library
+# Source the tables library (Bash implementation)
 source ./tables.sh
 
 # Create layout and data files
@@ -594,16 +612,16 @@ draw_table layout.json data.json
    - Hidden columns do not affect the table layout or border rendering
 
 6. **Performance**:
-   - Very large datasets may cause performance issues
-   - Consider limiting data or pre-filtering for large datasets
+   - The Bash implementation is slower than the C implementation due to `jq` subprocess calls
+   - For high-throughput use, prefer the C binary
 
 7. **Testing**:
-   - The project includes an extensive suite of test scripts to ensure reliability
-   - These tests cover various scenarios and edge cases for robust functionality
+   - The project includes a comprehensive test suite (`tests/run_tests.sh`)
+   - Tests compare C and Bash output across 98 test cases
 
 8. **Color Compatibility**:
    - The colored output uses ANSI escape sequences which work in most terminals
-   - For environments without color support, consider piping through `cat -A` to see escape sequences
+   - Use `--mono` to disable all colors for environments without color support
 
 ## Dependencies
 
@@ -614,44 +632,7 @@ draw_table layout.json data.json
 
 ## Unicode and International Character Support
 
-Tables.sh now includes **enterprise-grade Unicode support** with accurate width detection for international characters and emojis:
-
-### Advanced Unicode Features
-
-- **Perfect Emoji Support**: All emojis render with correct double-width spacing (🚀📊🌟💻🔥📈🎯✅)
-- **International Character Support**: Proper handling of CJK (Chinese, Japanese, Korean) characters
-- **ANSI Color Code Handling**: Strips ANSI escape sequences before width calculation for accurate alignment
-- **Multi-tier Performance Optimization**:
-  - ASCII-only text uses ultra-fast simple length calculation
-  - Extended ASCII gets optimized processing
-  - Complex Unicode characters get full UTF-8 decoding only when needed
-
-### Unicode Width Detection
-
-The system accurately detects character display widths using proper UTF-8 decoding:
-
-```bash
-# Example with mixed Unicode content
-{
-  "title": "🚀 Server Status 📊 Performance Report 🌟 $(date +%Y-%m-%d) 💻",
-  "footer": "✅ Data Complete 🔥 Analysis Ready 📈 Generated $(date +%H:%M:%S) 🎯"
-}
-```
-
-**Output:**
-
-```table
-╭─────────────────────────────────────────────────────────╮
-│ 🚀 Server Status 📊 Performance Report 🌟 2025-07-07 💻 │
-├────┬───────────────┬──────────┬───────────┬──────────┬──╯
-│ ID │ Server Name   │ Category │ CPU Cores │  Status  │
-├────┼───────────────┼──────────┼───────────┼──────────┤
-│  1 │ web-server-01 │   Web    │         4 │ Running  │
-│  2 │ db-server-01  │ Database │         8 │ Running  │
-├────┴───────────────┴──────────┴───────────┴──────────┴──────╮
-│ ✅ Data Complete 🔥 Analysis Ready 📈 Generated 04:51:01 🎯 │
-╰─────────────────────────────────────────────────────────────╯
-```
+Tables handles Unicode width detection for international characters and emojis, ensuring accurate column alignment even with double-width characters.
 
 ### Supported Unicode Ranges
 
@@ -677,7 +658,7 @@ Tables.sh supports **dynamic content generation** with command substitution in t
 ```json
 {
   "title": "Server Report - Generated $(date '+%Y-%m-%d %H:%M:%S')",
-  "footer": "System Load: $(uptime | cut -d':' -f4-) - Total Servers: $(jq length data.json)"
+  "footer": "System Load: $(uptime | cut -d':' -f4-) - Total Servers: $(jq 'length' data.json)"
 }
 ```
 
@@ -688,106 +669,36 @@ Tables.sh supports **dynamic content generation** with command substitution in t
 }
 ```
 
-## Performance Optimizations
-
-Tables.sh has been **extensively optimized** for maximum performance while maintaining full functionality:
-
-### Performance Features
-
-- **Multi-tier Fast Paths**:
-  - Pure ASCII text: Instant processing with simple string length
-  - Extended ASCII: Optimized processing without Unicode overhead
-  - Complex Unicode: Full UTF-8 decoding only when necessary
-- **Eliminated I/O Overhead**: Removed temporary file creation for Unicode processing
-- **Streamlined Processing**: Consolidated functions and optimized algorithms
-- **Memory Efficient**: Reduced memory footprint through code optimization
-
-### Performance Benchmarks
-
-- **ASCII Text**: ~10x faster processing for pure ASCII content
-- **Mixed Content**: ~5x faster for content with basic symbols
-- **Unicode Content**: ~3x faster while maintaining perfect accuracy
-- **Large Tables**: Significant improvement in rendering speed for tables with many rows
-
-## Code Quality and Maintainability
-
-The codebase has been **professionally optimized** for maintainability and reliability:
-
-### Code Quality Features
-
-- **Under 1,000 Lines**: Reduced from 1140+ lines to 998 lines while adding features
-- **Zero Shellcheck Warnings**: Clean code that passes all static analysis
-- **Comprehensive Test Suite**: Extensive testing covering all features and edge cases
-- **Modular Design**: Well-structured functions with clear separation of concerns
-- **Documentation**: Thorough inline documentation and comments
-
-### Testing Coverage
-
-The project includes **comprehensive test suites**:
-
-- **Basic Functionality Tests**: Core table rendering features
-- **Summary and Aggregation Tests**: All summary types and calculations
-- **Text Wrapping Tests**: Various wrapping modes and configurations
-- **Complex Layout Tests**: Advanced table structures and formatting
-- **Title and Footer Tests**: All positioning and formatting options
-- **Unicode and Emoji Tests**: International character support validation
-- **Performance Tests**: Benchmarking and optimization validation
-
-## Advanced Table Features
-
-### Intelligent Text Wrapping
+## Text Wrapping
 
 - **Word Wrapping**: Intelligent word boundary detection
 - **Character Wrapping**: Custom character-based wrapping (e.g., comma-separated lists)
 - **Width Management**: Automatic and manual column width control
 - **Overflow Handling**: Multiple strategies for handling content overflow
 
-### Data Processing Pipeline
+## Data Processing Pipeline
 
 - **Validation Layer**: Type-specific data validation for all supported data types
-- **Formatting Layer**: Sophisticated formatting with thousands separators and custom formats
+- **Formatting Layer**: Thousands separators, custom formats, and datatype-specific display
 - **Aggregation Layer**: Multiple summary types with accurate calculations
 - **Sorting Layer**: Multi-key sorting with priority support
 
-### Visual Enhancements
+## Dependencies
 
-- **Professional Borders**: Unicode box-drawing characters for clean appearance
-- **Color Themes**: Multiple color schemes with distinct element coloring
-- **Flexible Positioning**: Precise control over title and footer placement
-- **Responsive Layout**: Automatic adjustment to content and terminal width
-
-## Enterprise Features
-
-### Production-Ready Capabilities
-
-- **Error Handling**: Comprehensive error detection and user-friendly messages
-- **Input Validation**: Robust validation of JSON structure and data types
-- **Graceful Degradation**: Handles missing or malformed data gracefully
-- **Memory Management**: Efficient memory usage for large datasets
-- **Cross-Platform**: Works on Linux, macOS, and other Unix-like systems
-
-### Integration Support
-
-- **Script Sourcing**: Can be sourced as a library in other scripts
-- **API Functions**: Clean function interfaces for programmatic use
-- **Pipeline Friendly**: Works well in shell pipelines and automation
-- **CI/CD Ready**: Suitable for continuous integration and deployment workflows
+- Bash: `jq`, `bash` 4.0+, `awk`, `sed`
+- C: `libjansson-dev`, `gcc`, `make`
+- Testing: `shellcheck`, `cppcheck`, `jq`
 
 ## Version Information
 
-- **Current Version**: 2.0.0
+- **Current Version**: 3.0.0
 - **Version History**:
-  - **2.0.0** - Major Unicode and performance overhaul
-    - Added enterprise-grade Unicode support with accurate width detection
-    - Implemented multi-tier performance optimization system
-    - Added comprehensive emoji and international character support
-    - Reduced codebase to under 1,000 lines while adding features
-    - Added dynamic content support with command substitution
-    - Enhanced color placeholder system
-    - Achieved zero shellcheck warnings
-    - Added extensive test coverage for Unicode scenarios
-  - 1.0.2 - Added help functionality and version history section
-  - 1.0.1 - Fixed shellcheck issues (SC2004, SC2155)
-  - 1.0.0 - Initial release with table rendering functionality
+  - **3.0.0** - Added C implementation, `--mono` flag, `blanks`/`nonblanks` summaries, annotated rows, `visible` column property, full kcpu/kmem summary support
+    - C implementation for performance (Bash remains the reference)
+    - `--mono` flag to disable all ANSI colors
+    - New summary types: `blanks`, `nonblanks`
+    - `int` datatype renders without thousands separators; `num`/`float` render with separators
+    - Annotated rows (`"annotate": true`) for display-only data excluded from summaries
+    - 98 test cases
 
-Use `./tables.sh --version` to see the current version and `./tables.sh --help` for usage information.
+Use `./tables --version` (C) or `./tables.sh --version` (Bash) to see the current version, or `./tables --help` / `./tables.sh --help` for usage information.
