@@ -203,9 +203,19 @@ int prepare_data(const char *data_file, TableConfig *config, TableData *data) {
             if (json_is_string(val)) {
                 /* String values are duplicated directly */
                 row->values[j] = strdup_safe(json_string_value(val));
-            } else if (json_is_number(val)) {
-                /* Numbers are converted to string with %g format (no trailing zeros) */
+            } else if (json_is_integer(val)) {
+                /* Integer JSON values: format without scientific notation */
                 char buffer[32];
+                snprintf(buffer, sizeof(buffer), "%lld", (long long)json_integer_value(val));
+                row->values[j] = strdup_safe(buffer);
+            } else if (json_is_real(val)) {
+                /* Real/float JSON values: use %g for clean representation */
+                char buffer[64];
+                snprintf(buffer, sizeof(buffer), "%g", json_real_value(val));
+                row->values[j] = strdup_safe(buffer);
+            } else if (json_is_number(val)) {
+                /* Fallback for numbers that are neither integer nor real */
+                char buffer[64];
                 snprintf(buffer, sizeof(buffer), "%g", json_number_value(val));
                 row->values[j] = strdup_safe(buffer);
             } else if (json_is_null(val)) {

@@ -170,7 +170,9 @@ void calculate_column_widths(TableConfig *config, TableData *data) {
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                             summary_text[sizeof(summary_text) - 1] = '\0';
                             free(formatted);
-                        } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
+                        } else if (col->data_type == DATA_INT) {
+                            snprintf(summary_text, sizeof(summary_text), "%.0f", stats->max);
+                        } else if (col->data_type == DATA_NUM) {
                             snprintf(summary_text, sizeof(summary_text), "%.0f", stats->max);
                             char *formatted = format_with_commas(summary_text);
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);
@@ -201,7 +203,9 @@ void calculate_column_widths(TableConfig *config, TableData *data) {
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                             summary_text[sizeof(summary_text) - 1] = '\0';
                             free(formatted);
-                        } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
+                        } else if (col->data_type == DATA_INT) {
+                            snprintf(summary_text, sizeof(summary_text), "%.0f", avg_result);
+                        } else if (col->data_type == DATA_NUM) {
                             snprintf(summary_text, sizeof(summary_text), "%.0f", avg_result);
                             char *formatted = format_with_commas(summary_text);
                             strncpy(summary_text, formatted, sizeof(summary_text) - 1);

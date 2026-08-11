@@ -105,15 +105,7 @@ they hold the data constant and vary only the layout.
 
 **Output**
 
-```text
-╭──────────┬────────╮
-│ Fruit    │ Crates │
-├──────────┼────────┤
-│ Apples   │  1,200 │
-│ Bananas  │    340 │
-│ Cherries │     87 │
-╰──────────┴────────╯
-```
+![Fruit table](images/fruit_table.svg)
 
 Three things happened without being asked for. Column widths were measured from the
 header and the widest cell, one space of padding was added on each side, and the `num`
@@ -155,23 +147,7 @@ the frame at once.
 
 **Output**
 
-```text
-     ╭─────────────────╮
-     │ Warehouse Stock │
-╭────┴───┬──────────┬──┴─────╮
-│ Region │ Fruit    │ Crates │
-├────────┼──────────┼────────┤
-│ North  │ Apples   │  1,200 │
-│ North  │ Bananas  │    340 │
-├────────┼──────────┼────────┤
-│ South  │ Cherries │     87 │
-│ South  │ Dates    │  1,500 │
-├────────┼──────────┼────────┤
-│        │ 4        │  3,127 │
-╰───┬────┴──────────┴───┬────╯
-    │ Close of business │
-    ╰───────────────────╯
-```
+![Warehouse table — title, break, summary and footer in one layout](images/warehouse_table.svg)
 
 Reading top to bottom:
 

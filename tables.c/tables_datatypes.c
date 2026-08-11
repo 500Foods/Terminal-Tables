@@ -217,7 +217,7 @@ int validate_number(const char *value) {
 
 /*
  * Formatting function for number data type (int, float)
- * Applies custom format string if provided, otherwise uses comma formatting
+ * Applies custom format string if provided, otherwise returns raw value
  */
 char *format_number(const char *value, const char *format, int string_limit, int wrap_mode, const char *wrap_char, int justification) {
     /* Return empty string for NULL, "null", or zero values */
@@ -239,8 +239,8 @@ char *format_number(const char *value, const char *format, int string_limit, int
         return strdup(buffer);
     }
 
-    /* Default: apply thousands separators for readability */
-    return format_with_commas(value);
+    /* Default: return raw value without comma separators */
+    return strdup(value);
 }
 
 /*

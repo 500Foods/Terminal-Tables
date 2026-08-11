@@ -403,10 +403,10 @@ format_numeric() {
         echo "${value}"
     fi
 }
-format_number() { format_numeric "$1" "$2" "true"; }
-# format_number: Integer formatter (always adds commas)
+format_number() { format_numeric "$1" "$2" "false"; }
+# format_number: Integer formatter (raw, no comma separators)
 format_num()    { format_numeric "$1" "$2" "true"; }
-# format_num: Num-type formatter (same as format_number)
+# format_num: Num-type formatter (with thousands separators)
 
 # float: pad to column's max observed decimal places, then add commas
 format_float() {
@@ -1051,8 +1051,8 @@ format_summary_value() {
                     summary_value="$(format_with_commas "${SUM_SUMMARIES[${j}]}")M"
                 elif [[ "${datatype}" == "num" ]]; then
                     summary_value=$(format_num "${SUM_SUMMARIES[${j}]}" "${format}")
-                elif [[ "${datatype}" == "int" ]]; then
-                    summary_value=$(format_with_commas "${SUM_SUMMARIES[${j}]}")
+                 elif [[ "${datatype}" == "int" ]]; then
+                     summary_value="${SUM_SUMMARIES[${j}]}"
                 elif [[ "${datatype}" == "float" ]]; then
                     local decimals=${MAX_DECIMAL_PLACES[${j}]:-2}
                     local formatted_sum
@@ -1073,7 +1073,7 @@ format_summary_value() {
                 formatted_min=$(printf "%.${decimals}f" "${summary_value}")
                 summary_value=$(format_with_commas "${formatted_min}")
              elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
-                 summary_value="${summary_value}"
+                 : # int min: raw value, no commas
              fi
              ;;
          max)
@@ -1087,11 +1087,11 @@ format_summary_value() {
                  local formatted_max
                  formatted_max=$(printf "%.${decimals}f" "${summary_value}")
                  summary_value=$(format_with_commas "${formatted_max}")
-             elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
-                 summary_value="${summary_value}"
-             fi
-            ;;
-        count)
+              elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
+                  : # int max: raw value, no commas
+              fi
+             ;;
+         count)
             summary_value="${COUNT_SUMMARIES[${j}]:-0}"
             ;;
         unique)
