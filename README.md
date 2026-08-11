@@ -23,25 +23,27 @@ Looking for copy-pasteable layouts and rendered output? See [EXAMPLES.md](EXAMPL
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2026-08-11 01:01:26 UTC
+Last updated at 2026-08-11 01:20:12 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Markdown                        17           1831             89           9241
-JSON                           110              0              0           4739
+SVG                             91              0              0          16248
+Markdown                        17           1837              2           7812
+JSON                           110              0              0           4740
 C                               14            356           1391           3290
-Bourne Shell                     3            213            480           2125
-SVG                              9              0              0            759
+Bourne Shell                     3            214            499           2148
 C/C++ Header                    13             81            351            240
 YAML                             2              4              0             66
 make                             1              6              8             32
 -------------------------------------------------------------------------------
-SUM:                           169           2491           2319          20492
+SUM:                           251           2498           2251          34576
 -------------------------------------------------------------------------------
-86 Files were skipped (duplicate, binary, or without source code):
+92 Files were skipped (duplicate, binary, or without source code):
   json: 83
+  svg: 5
   gitattributes: 1
   gitignore: 1
+  png: 1
   tables: 1
 ```
 <!--CLOC-END-->
