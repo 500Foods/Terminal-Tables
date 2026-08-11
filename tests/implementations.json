@@ -11,6 +11,9 @@
     },
     "loc": {
       "path": "tables.sh"
+    },
+    "size": {
+      "paths": ["tables.sh/tables.sh"]
     }
   },
   {
@@ -26,6 +29,9 @@
     "loc": {
       "path": "tables.c",
       "cloc_langs": "C,C/C++ Header"
+    },
+    "size": {
+      "paths": ["tables.c/tables"]
     }
   }
 ]

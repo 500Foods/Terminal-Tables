@@ -32,8 +32,8 @@ fi
 # Implementation registry
 # -----------------------------------------------------------------------------
 # Every language/binary under test is described once in implementations.json
-# (id, display name, run command template, lint tool, loc path) instead of
-# being hard-coded here. Adding a new language later — Python, Lua, Rust,
+# (id, display name, run command template, lint tool, loc path, size paths)
+# instead of being hard-coded here. Adding a new language later — Python, Lua, Rust,
 # Go, ... — is just a new entry in that file; nothing below needs to change.
 # One of the entries must be marked "reference": true (currently Bash, per
 # AGENTS.md: it is the oracle every other implementation is compared
@@ -46,7 +46,7 @@ fi
 # =============================================================================
 
 declare -a IMPL_ID IMPL_NAME IMPL_REFERENCE IMPL_BASELINE IMPL_RUN_TOKENS IMPL_TIMEOUT
-declare -a IMPL_LINT_NAME IMPL_LINT_TOKENS IMPL_LOC_PATH IMPL_LOC_LANGS
+declare -a IMPL_LINT_NAME IMPL_LINT_TOKENS IMPL_LOC_PATH IMPL_LOC_LANGS IMPL_SIZE_PATHS
 REFERENCE_IDX=-1
 BASELINE_IDX=-1
 
@@ -106,7 +106,8 @@ load_implementations() {
             (.lint.name // ""),
             ((.lint.cmd // []) | join("\u001f")),
             (.loc.path // ""),
-            (.loc.cloc_langs // "")
+            (.loc.cloc_langs // ""),
+            ((.size.paths // []) | join("\u001f"))
         ] | @tsv
     ' "${IMPLEMENTATIONS_JSON}")
 
@@ -114,7 +115,7 @@ load_implementations() {
     for line in "${lines[@]}"; do
         local -a f=()
         mapfile -t -d $'\t' f <<< "${line}"
-        f[9]="${f[9]%$'\n'}"
+        f[10]="${f[10]%$'\n'}"
 
         if ! impl_available "${f[4]}"; then
             echo -e "${YELLOW}Warning: implementation '${f[1]}' unavailable, skipping${NC}" >&2
@@ -131,6 +132,7 @@ load_implementations() {
         IMPL_LINT_TOKENS[idx]="${f[7]}"
         IMPL_LOC_PATH[idx]="${f[8]}"
         IMPL_LOC_LANGS[idx]="${f[9]}"
+        IMPL_SIZE_PATHS[idx]="${f[10]}"
         [[ "${IMPL_REFERENCE[idx]}" == "true" ]] && REFERENCE_IDX=${idx}
         [[ "${IMPL_BASELINE[idx]}" == "true" ]] && BASELINE_IDX=${idx}
         idx=$((idx + 1))
@@ -203,9 +205,9 @@ Usage: run_tests.sh [OPTIONS] [SUITE ... | LABEL ...]
   Run comparison tests for the given suites (default: 00–09).
 
   Implementations under test are defined in tests/implementations.json
-  (id, display name, run command, lint tool, lines-of-code path). Add a
-  new language by adding an entry there; this script does not hard-code
-  any particular language.
+  (id, display name, run command, lint tool, lines-of-code path, solution
+  size paths). Add a new language by adding an entry there; this script
+  does not hard-code any particular language.
 
   Passing one or more specific test labels (containing a dash, e.g.
   "9-V") instead of suite numbers switches to "show" mode: instead of
@@ -333,6 +335,41 @@ count_loc_for_impl() {
     echo "${loc:-0}"
 }
 
+# Human-readable byte size ("N B" / "N.N KB" / "N.N MB") for the Solution
+# Size row.
+format_bytes() {
+    local b="$1"
+    awk -v b="$b" 'BEGIN {
+        if (b >= 1048576) printf "%.1f MB", b / 1048576;
+        else if (b >= 1024) printf "%.1f KB", b / 1024;
+        else printf "%d B", b;
+    }'
+}
+
+# Total on-disk byte size of one implementation's configured size.paths
+# (relative to the repo root; missing files are skipped). Returns 0 if
+# size.paths is unset so the Solution Size row degrades gracefully.
+#
+# size.paths is a list because a solution isn't always a single file: a
+# language that ships a main script plus helper libraries/modules should
+# list every file that's part of the deployed solution here so its total
+# reflects the whole thing, not just the entry point.
+count_size_for_impl() {
+    local idx="$1"
+    local paths_joined="${IMPL_SIZE_PATHS[$idx]}"
+    [[ -z "${paths_joined}" ]] && { echo 0; return; }
+    local -a paths=()
+    IFS=$'\x1f' read -ra paths <<< "${paths_joined}"
+    local total=0 p full sz
+    for p in "${paths[@]}"; do
+        full="${PROJECT_ROOT}/${p}"
+        [[ -f "${full}" ]] || continue
+        sz=$(stat -c '%s' "${full}" 2>/dev/null || stat -f '%z' "${full}" 2>/dev/null || echo 0)
+        total=$(( total + sz ))
+    done
+    echo "${total}"
+}
+
 # Color a list of ms values: fastest = {GREEN}, slowest = {RED}. Takes any
 # number of values; prints one colored "N ms" string per input on its own
 # line, in input order. Equal values all get green.
@@ -379,6 +416,32 @@ colorize_counts() {
     for v in "${vals[@]}"; do
         local label
         label=$(format_int "$v")
+        if [[ $min -eq $max ]]; then
+            echo "{GREEN}${label}{NC}"
+        elif [[ $v -eq $min ]]; then
+            echo "{GREEN}${label}{NC}"
+        elif [[ $v -eq $max ]]; then
+            echo "{RED}${label}{NC}"
+        else
+            echo "$label"
+        fi
+    done
+}
+
+# Same coloring rule as colorize_counts but for byte sizes (Solution Size
+# row: smallest = green, largest = red), formatted via format_bytes.
+colorize_sizes() {
+    local -a vals=("$@")
+    local n=${#vals[@]}
+    [[ $n -eq 0 ]] && return
+    local min="${vals[0]}" max="${vals[0]}" v
+    for v in "${vals[@]}"; do
+        [[ $v -lt $min ]] && min=$v
+        [[ $v -gt $max ]] && max=$v
+    done
+    for v in "${vals[@]}"; do
+        local label
+        label=$(format_bytes "$v")
         if [[ $min -eq $max ]]; then
             echo "{GREEN}${label}{NC}"
         elif [[ $v -eq $min ]]; then
@@ -832,6 +895,26 @@ if [[ -s "${PERF_FILE}" ]]; then
         append_ratio_pairs loc_pairs "${loc_vals[@]}"
         data_rows+=","
         data_rows+=$(build_row "loc" "Lines of Code" "" "${loc_pairs[@]}")
+    fi
+
+    # Informational annotated Solution Size row (excluded from any future
+    # summary math), sized from each implementation's configured
+    # size.paths (relative to the repo root).
+    declare -a size_vals=()
+    size_any=0
+    for ((i=0; i<IMPL_COUNT; i++)); do
+        size_vals[i]=$(count_size_for_impl "$i")
+        [[ ${size_vals[$i]} -gt 0 ]] && size_any=1
+    done
+    if [[ ${size_any} -eq 1 ]]; then
+        mapfile -t size_colored < <(colorize_sizes "${size_vals[@]}")
+        size_pairs=()
+        for ((i=0; i<IMPL_COUNT; i++)); do
+            size_pairs+=("t_${IMPL_ID[$i]}" "${size_colored[$i]}")
+        done
+        append_ratio_pairs size_pairs "${size_vals[@]}"
+        data_rows+=","
+        data_rows+=$(build_row "size" "Solution Size" "" "${size_pairs[@]}")
     fi
 
     data_rows+="]"

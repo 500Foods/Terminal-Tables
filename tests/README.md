@@ -40,6 +40,7 @@ Each test case is defined by a pair of files in the appropriate `suite_XX/` dire
 - `test_X_Y_layout.json` — JSON layout definition
 
 For dynamic content (timestamps, computed counts), use `_layout.sh` instead:
+
 - `test_X_Y_layout.sh` — Bash script that outputs JSON (supports `$(date)`, `$(jq)`, etc.)
 
 The `manifest.json` file lists all test cases with their suite, label, and file names.
@@ -56,13 +57,16 @@ bash tests/run_tests.sh --results # Re-show performance table from last run
 ```
 
 After a run that includes comparison suites, timing data is saved to:
+
 - `tests/performance_data.json`
 - `tests/performance_layout.json`
 
 The performance table includes one time column per implementation, one
 `"<Name> / C"` ratio column per non-baseline implementation, a Total row,
-and an annotated **Lines of Code** row (from `cloc`; excluded from any
-summary math via `"annotate": true`). Use `--results` (or `-r`) to render
+an annotated **Lines of Code** row (from `cloc`; excluded from any
+summary math via `"annotate": true`), and an annotated **Solution Size**
+row (total on-disk bytes of each implementation's configured `size.paths`,
+also excluded from summary math). Use `--results` (or `-r`) to render
 that table again without re-running tests — this renders with the baseline
 implementation (C), so it's fast regardless of how slow other
 implementations are.
@@ -76,6 +80,7 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
 1. Create a new data file: `tests/scenarios/suite_XX/test_X_Y_data.json`
 2. Create a new layout file: `tests/scenarios/suite_XX/test_X_Y_layout.json`
 3. Add an entry to `tests/scenarios/manifest.json`:
+
    ```json
    {"suite":"01","label":"1-J","data_file":"test_1_J_data.json","layout_file":"test_1_J_layout.json"}
    ```
@@ -86,6 +91,7 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
 
 1. Build/implement it wherever makes sense (e.g. `tables.py/tables.py`) so it accepts `layout.json data.json [--mono]` like the existing implementations.
 2. Append an entry to `tests/implementations.json`:
+
    ```json
    {
      "id": "python",
@@ -93,10 +99,16 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
      "run": ["python3", "{PROJECT_ROOT}/tables.py/tables.py", "{LAYOUT}", "{DATA}"],
      "timeout": 30,
      "lint": {"name": "ruff", "cmd": ["ruff", "check", "{PROJECT_ROOT}/tables.py"]},
-     "loc": {"path": "tables.py", "cloc_langs": "Python"}
+     "loc": {"path": "tables.py", "cloc_langs": "Python"},
+     "size": {"paths": ["tables.py/tables.py"]}
    }
    ```
-3. That's it — `run_tests.sh` will run it against every scenario, diff its output (color and `--mono`) against the reference, lint it (if `lint` is set and the tool is installed), include it in the Lines of Code row (if `loc` is set and `cloc` is installed), and add both a time column and a `"<Name> / C"` ratio column for it to the performance table automatically.
+
+   `size.paths` is a list because a solution isn't always one file — if it's
+   made up of a main script plus helper libraries/modules, list every file
+   that's part of the deployed solution so the Solution Size row reflects
+   the whole thing, not just the entry point.
+3. That's it — `run_tests.sh` will run it against every scenario, diff its output (color and `--mono`) against the reference, lint it (if `lint` is set and the tool is installed), include it in the Lines of Code row (if `loc` is set and `cloc` is installed), include it in the Solution Size row (if `size.paths` is set), and add both a time column and a `"<Name> / C"` ratio column for it to the performance table automatically.
 
 If the new implementation ever benchmarks faster than C on the full suite, that's worth investigating (and possibly moving `"baseline": true` to it) rather than assuming C has become the slow one — see AGENTS.md.
 
@@ -116,12 +128,14 @@ Each array entry describes one implementation:
 | `lint.cmd`      | no       | Argv array for the lint command (same placeholders as `run`, minus `{LAYOUT}`/`{DATA}`).            |
 | `loc.path`      | no       | Path (relative to the repo root) passed to `cloc` for the Lines of Code row.                       |
 | `loc.cloc_langs`| no       | Optional `cloc --include-lang` filter (e.g. `"C,C/C++ Header"`).                                   |
+| `size.paths`    | no       | List of paths (relative to the repo root) whose on-disk byte sizes are summed for the Solution Size row. A list because a solution may be more than one file — a main script/binary plus any helper libraries/modules it depends on should all be listed here. |
 
 An implementation whose `run`'s first token isn't an executable file (absolute path) or a command on `PATH` (bare name) is skipped with a warning instead of failing the whole run — useful while a language is only partially wired up.
 
 ## Normalization
 
 The comparison normalizes only:
+
 - Timestamps (dates → `DATE`, times → `TIME`) — needed because some scenarios use `$(date)` in titles/footers
 
 ANSI color codes and separator geometry are **not** stripped. Both implementations must emit identical theme colors, `{COLOR}` placeholder expansions, color scoping, and border/separator line lengths.
@@ -133,7 +147,7 @@ All implementations are expected to support `--mono` (disable all ANSI colors). 
 ## Performance Notes
 
 - Per-implementation timeout comes from `implementations.json` (`timeout`, seconds); currently 120s for Bash and 10s for C.
-- The performance table's per-implementation timeout, LOC path, and lint command all come from `implementations.json` — see that file to tune any of them.
+- The performance table's per-implementation timeout, LOC path, size paths, and lint command all come from `implementations.json` — see that file to tune any of them.
 
 ## Requirements
 
