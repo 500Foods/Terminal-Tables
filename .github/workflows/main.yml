@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install runtime dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq bats shellcheck cppcheck
+        run: sudo apt-get update && sudo apt-get install -y jq shellcheck cppcheck
       - name: Download C binary
         uses: actions/download-artifact@v4
         with:

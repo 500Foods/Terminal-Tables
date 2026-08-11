@@ -33,11 +33,18 @@
 # -----------------------------------------------------------------------------
 # Global state (reset by tables_reset when reused in-process)
 # -----------------------------------------------------------------------------
+# Number of columns parsed from the layout JSON
 declare -g COLUMN_COUNT=0          # number of columns from layout
+# Maximum lines in any row after wrapping (for multi-line layout)
+# Reset max lines counter
 declare -g MAX_LINES=1             # tallest wrapped cell in any row
+# Name of the active theme ("Red" or "Blue")
 declare -g THEME_NAME="Red"        # active theme name
+# Spaces on each side of cell content
 declare -g DEFAULT_PADDING=1       # spaces on each side of cell content
+# Version string for --version output
 declare -g TABLES_VERSION="1.0.0"  # --version / tables_version
+# When 1, --mono flag suppresses all ANSI colors
 declare -g MONO_MODE=0             # --mono: suppress all ANSI colors
 
 # Map datatype → validate/format handlers and allowed summary kinds.
@@ -85,6 +92,7 @@ if [[ -z "${RED:-}" ]]; then
     declare -r DIM=$'\033[2m'
     declare -r UNDERLINE=$'\033[4m'
     declare -r NC=$'\033[0m'   # No Color / reset
+# End of ANSI color constant declarations
 fi
 
 # =============================================================================
@@ -134,10 +142,12 @@ replace_color_placeholders() {
 # validate_* return a cleaned value. Looked up via DATATYPE_HANDLERS so a new
 # datatype is one table entry + two functions.
 
+# validate_data: dispatch validation by data type
 validate_data() {
     local value="$1"
     local type="$2"
 
+# Dispatch validation based on data type string
     case "${type}" in
         text)
             [[ "${value}" != "null" ]] && echo "${value}" || echo ""
@@ -190,6 +200,8 @@ validate_kmem()   { validate_data "$1" "kmem"; }
 # -----------------------------------------------------------------------------
 # get_theme fills THEME with colors + Unicode box-drawing glyphs.
 
+# get_theme: populate THEME with colors and box-drawing chars
+# Apply the selected theme
 get_theme() {
     local theme_name="$1"
     unset THEME
@@ -257,18 +269,32 @@ get_theme() {
 
 get_display_length() {
     local text="$1"
-    local clean_text
-    clean_text=$(echo -n "${text}" | sed -E 's/\x1B\[[0-9;]*[a-zA-Z]//g')
-    # Check if pure ASCII (all bytes <= 127)
-    # If the string after removing bytes >= 128 equals original, it's pure ASCII
-    local ascii_only
-    ascii_only=$(echo -n "${clean_text}" | tr -d '\200-\377' 2>/dev/null)
-    if [[ "${clean_text}" == "${ascii_only}" ]]; then
+    local clean_text="${text}"
+
+    # Strip ANSI escape sequences for width calculation. This is a hot path
+    # (called for every auto-width cell), so avoid forking sed: only run the
+    # bash-regex stripping loop when an ESC byte is actually present, and
+    # skip it entirely otherwise.
+    if [[ "${clean_text}" == *$'\033'* ]]; then
+        local esc=$'\033' pattern stripped="" rest="${clean_text}"
+        pattern="^([^${esc}]*)${esc}\\[[0-9;]*[a-zA-Z](.*)\$"
+        while [[ "${rest}" =~ ${pattern} ]]; do
+            stripped+="${BASH_REMATCH[1]}"
+            rest="${BASH_REMATCH[2]}"
+        done
+        clean_text="${stripped}${rest}"
+    fi
+
+    # Fast path: pure ASCII needs no UTF-8 width handling and no forks
+    # (previously forked `tr` here on every call).
+    if [[ "${clean_text}" != *[![:ascii:]]* ]]; then
         echo "${#clean_text}"
         return
     fi
     local codepoints
+# Convert to hex byte sequence for UTF-8 parsing
     codepoints=$(echo -n "${clean_text}" | od -An -tx1 | tr -d ' \n' || true)
+# Initialize width accumulator and byte position
     local width=0 i=0 len=${#codepoints}
     while [[ ${i} -lt ${len} ]]; do
         local byte1_hex="${codepoints:${i}:2}"
@@ -294,6 +320,7 @@ get_display_length() {
         fi
     done
     echo "${width}"
+# get_display_length: count terminal columns, handling ANSI and Unicode
 }
 # -----------------------------------------------------------------------------
 # Numeric / text formatters
@@ -301,6 +328,7 @@ get_display_length() {
 
 # Insert thousands separators: 1234567 → 1,234,567 (keeps fractional part).
 format_with_commas() {
+# Input number string to format
     local num="$1"
     
     # Handle decimal numbers by separating integer and decimal parts
@@ -309,6 +337,7 @@ format_with_commas() {
         local decimal_part="${BASH_REMATCH[2]}"
         
         # Add commas to integer part
+# Repeatedly insert comma before groups of 3 digits from the right
         local result="${integer_part}"
         while [[ ${result} =~ ^([0-9]+)([0-9]{3}.*) ]]; do
             result="${BASH_REMATCH[1]},${BASH_REMATCH[2]}"
@@ -327,6 +356,7 @@ format_with_commas() {
 
 # text: optional clip/wrap when string_limit > 0
 format_text() {
+# Parameters: value, format, string_limit, wrap_mode, wrap_char, justification
     local value="$1" format="$2" string_limit="$3" wrap_mode="$4" wrap_char="$5" justification="$6"
     [[ -z "${value}" || "${value}" == "null" ]] && { echo ""; return; }
     if [[ "${string_limit}" -gt 0 && ${#value} -gt ${string_limit} ]]; then
@@ -347,15 +377,20 @@ format_text() {
 # Shared path for int/num: blank out zeros, optional commas.
 format_numeric() {
     local value="$1"
+# Input value to format
     local format="$2"
+# Optional format string
     local use_commas="$3"
+# Whether to apply comma formatting
 
     # Treat null / 0 / 0.0 as empty (zero_value handling is one layer up)
+# Return empty for null, zero, or empty values
     if [[ -z "${value}" || "${value}" == "null" || "${value}" == "0" || "${value}" =~ ^0+(\.0+)?$ ]]; then
         echo ""
         return
     fi
 
+# If value is numeric, apply formatting
     if [[ "${value}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         if [[ -n "${format}" ]]; then
             printf '%s' "${value}"
@@ -369,7 +404,9 @@ format_numeric() {
     fi
 }
 format_number() { format_numeric "$1" "$2" "true"; }
+# format_number: Integer formatter (always adds commas)
 format_num()    { format_numeric "$1" "$2" "true"; }
+# format_num: Num-type formatter (same as format_number)
 
 # float: pad to column's max observed decimal places, then add commas
 format_float() {
@@ -378,6 +415,7 @@ format_float() {
     
     if [[ "${value}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         local max_decimals="${MAX_DECIMAL_PLACES[${column_index}]:-2}"
+# Get max decimal places for this column for consistent formatting
         
         # Format with consistent decimal places
         local formatted_value
@@ -393,11 +431,14 @@ format_float() {
 
 # Kubernetes CPU (millicores) / memory formatters
 format_k_unit() {
+# Parameters: value, format, unit_type (cpu or mem)
     local value="$1" format="$2" unit_type="$3"
     [[ -z "${value}" || "${value}" == "null" ]] && { echo ""; return; }
+# Return empty for null or empty values
     if [[ "${unit_type}" == "cpu" ]]; then
         [[ "${value}" == "0" || "${value}" == "0m" ]] && { echo "0m"; return; }
         if [[ "${value}" =~ ^[0-9]+m$ ]]; then
+# Zero CPU values always display as '0m'
             local fmted; fmted=$(format_with_commas "${value%m}"); echo "${fmted}m"
         elif [[ "${value}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
             local fmted2; fmted2=$(format_with_commas "$((${value%.*} * 1000))"); printf "%sm\n" "${fmted2}"
@@ -413,8 +454,11 @@ format_k_unit() {
 }
 format_kcpu() { format_k_unit "$1" "$2" "cpu"; }
 format_kmem() { format_k_unit "$1" "$2" "mem"; }
+# format_kcpu: CPU formatter (delegates to format_k_unit)
 
+# format_kmem: Memory formatter (delegates to format_k_unit)
 # High-level: validate → format → apply null_value / zero_value display rules
+# format_display_value: validate, format, then apply null/zero display rules
 format_display_value() {
     local value="$1"
     local null_value="$2"
@@ -427,14 +471,17 @@ format_display_value() {
     local justification="$9"
 
     local validate_fn="${DATATYPE_HANDLERS[${datatype}_validate]}"
+# Look up validation and formatting function handlers
     local format_fn="${DATATYPE_HANDLERS[${datatype}_format]}"
 
     value=$("${validate_fn}" "${value}")
+# Validate the input value
     local display_value
     display_value=$("${format_fn}" "${value}" "${format}" "${string_limit}" \
         "${wrap_mode}" "${wrap_char}" "${justification}")
 
     if [[ "${value}" == "null" ]]; then
+# Apply null value display option (0, missing, or blank)
         case "${null_value}" in
             0)       display_value="0" ;;
             missing) display_value="Missing" ;;
@@ -445,6 +492,7 @@ format_display_value() {
         case "${zero_value}" in
             0)       display_value="0" ;;
             missing) display_value="Missing" ;;
+# Output the final display value
             *)       display_value="" ;;
         esac
     fi
@@ -457,6 +505,7 @@ format_display_value() {
 
 # Title / footer (from layout JSON)
 declare -gx TABLE_TITLE=""
+# Title is present and non-empty
 declare -gx TITLE_WIDTH=0
 declare -gx TITLE_POSITION="none"
 declare -gx TABLE_FOOTER=""
@@ -467,16 +516,20 @@ declare -gx FOOTER_POSITION="none"
 declare -ax HEADERS=()
 declare -ax KEYS=()
 declare -ax JUSTIFICATIONS=()
+# Normalize justification to lowercase
 declare -ax DATATYPES=()
 declare -ax NULL_VALUES=()
 declare -ax ZERO_VALUES=()
 declare -ax FORMATS=()
+# Normalize datatype to lowercase
 declare -ax SUMMARIES=()
 declare -ax BREAKS=()
 declare -ax STRING_LIMITS=()
 declare -ax WRAP_MODES=()
+# Normalize null_value to lowercase
 declare -ax WRAP_CHARS=()
 declare -ax PADDINGS=()
+# Normalize zero_value to lowercase
 declare -ax WIDTHS=()
 declare -ax SORT_KEYS=()
 declare -ax SORT_DIRECTIONS=()
@@ -484,6 +537,7 @@ declare -ax SORT_PRIORITIES=()
 declare -ax IS_WIDTH_SPECIFIED=()
 declare -ax VISIBLES=()
 
+# Validate input files exist and are non-empty
 validate_input_files() {
     local layout_file="$1"
     local data_file="$2"
@@ -493,23 +547,44 @@ validate_input_files() {
     fi
     return 0
 }
+# Handle visible field: explicitly set or default to true
 
 # Read top-level layout keys, then hand columns/sort off to helpers.
+# Parse layout JSON into parallel arrays
 parse_layout_file() {
     local layout_file="$1"
     local columns_json sort_json
 
-    THEME_NAME=$(jq -r '.theme // "Red"' "${layout_file}" || true)
-    TABLE_TITLE=$(jq -r '.title // ""' "${layout_file}" || true)
-    TITLE_POSITION=$(jq -r '.title_position // "none"' "${layout_file}" | tr '[:upper:]' '[:lower:]' || true)
-    TABLE_FOOTER=$(jq -r '.footer // ""' "${layout_file}" || true)
-    FOOTER_POSITION=$(jq -r '.footer_position // "none"' "${layout_file}" | tr '[:upper:]' '[:lower:]' || true)
-    columns_json=$(jq -c '.columns // []' "${layout_file}" || true)
-    sort_json=$(jq -c '.sort // []' "${layout_file}" || true)
+    # Single jq invocation for the whole layout file: one line of
+    # tab-separated top-level scalars, followed by the columns and sort
+    # arrays as compact JSON. Replaces five separate jq forks with one.
+    local layout_lines
+    mapfile -t layout_lines < <(jq -r '
+        ([(.theme // "Red"),
+          (.title // ""),
+          (.title_position // "none" | ascii_downcase),
+          (.footer // ""),
+          (.footer_position // "none" | ascii_downcase)] | @tsv),
+        (.columns // [] | tojson),
+        (.sort // [] | tojson)
+    ' "${layout_file}" || true)
 
+    local -a top_fields=()
+    mapfile -t -d $'\t' top_fields <<< "${layout_lines[0]}"
+    top_fields[4]="${top_fields[4]%$'\n'}"
+    THEME_NAME="${top_fields[0]}"
+    TABLE_TITLE="${top_fields[1]}"
+    TITLE_POSITION="${top_fields[2]}"
+    TABLE_FOOTER="${top_fields[3]}"
+    FOOTER_POSITION="${top_fields[4]}"
+    columns_json="${layout_lines[1]}"
+    sort_json="${layout_lines[2]}"
+
+# Explicit width: use it directly
     case "${TITLE_POSITION}" in
         left|right|center|full|none) ;;
         *)
+# Auto-calculate width from header length + padding
             echo -e "${THEME[border_color]}Warning: Invalid title position '${TITLE_POSITION}', using 'none'${THEME[text_color]}" >&2
             TITLE_POSITION="none"
             ;;
@@ -533,34 +608,55 @@ parse_layout_file() {
 # Blow each column object into the parallel arrays.
 parse_column_config() {
     local columns_json="$1"
+# Validate the parsed column configuration
     HEADERS=(); KEYS=(); JUSTIFICATIONS=(); DATATYPES=(); NULL_VALUES=(); ZERO_VALUES=()
     FORMATS=(); SUMMARIES=(); BREAKS=(); STRING_LIMITS=(); WRAP_MODES=(); WRAP_CHARS=()
     PADDINGS=(); WIDTHS=(); IS_WIDTH_SPECIFIED=(); VISIBLES=()
-    local column_count
-    column_count=$(jq '. | length' <<<"${columns_json}")
-    COLUMN_COUNT=${column_count}
-    for ((i=0; i<column_count; i++)); do
-        local col_json
-        col_json=$(jq -c ".[${i}]" <<<"${columns_json}")
-        HEADERS[i]=$(jq -r '.header // ""' <<<"${col_json}" || true)
-        KEYS[i]=$(jq -r '.key // (.header | ascii_downcase | gsub("[^a-z0-9]"; "_"))' <<<"${col_json}" || true)
-        JUSTIFICATIONS[i]=$(jq -r '.justification // "left"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        DATATYPES[i]=$(jq -r '.datatype // "text"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        NULL_VALUES[i]=$(jq -r '.null_value // "blank"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        ZERO_VALUES[i]=$(jq -r '.zero_value // "blank"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        FORMATS[i]=$(jq -r '.format // ""' <<<"${col_json}" || true)
-        SUMMARIES[i]=$(jq -r '.summary // "none"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        BREAKS[i]=$(jq -r '.break // false' <<<"${col_json}" || true)
-        STRING_LIMITS[i]=$(jq -r '.string_limit // 0' <<<"${col_json}" || true)
-        WRAP_MODES[i]=$(jq -r '.wrap_mode // "clip"' <<<"${col_json}" | tr '[:upper:]' '[:lower:]' || true)
-        WRAP_CHARS[i]=$(jq -r '.wrap_char // ""' <<<"${col_json}" || true)
-        PADDINGS[i]=$(jq -r '.padding // '"${DEFAULT_PADDING}" <<<"${col_json}" || true)
-        local visible_raw visible_key_check
-        visible_raw=$(jq -r '.visible // true' <<<"${col_json}" || true)
-        visible_key_check=$(jq -r 'has("visible")' <<<"${col_json}" || true)
-        VISIBLES[i]=$(if [[ "${visible_key_check}" == "true" ]]; then jq -r '.visible' <<<"${col_json}" || true; else echo "${visible_raw}"; fi)
-        local specified_width
-        specified_width=$(jq -r '.width // 0' <<<"${col_json}")
+
+    # Single jq invocation for every column: one @tsv line per column with
+    # all fields (defaults/lowercasing applied in jq) instead of ~16 jq
+    # forks per column.
+    local -a col_lines=()
+    mapfile -t col_lines < <(jq -r '
+        .[] | (.header // "") as $h | [
+            $h,
+            (.key // ($h | ascii_downcase | gsub("[^a-z0-9]"; "_"))),
+            (.justification // "left" | ascii_downcase),
+            (.datatype // "text" | ascii_downcase),
+            (.null_value // "blank" | ascii_downcase),
+            (.zero_value // "blank" | ascii_downcase),
+            (.format // ""),
+            (.summary // "none" | ascii_downcase),
+            (.break // false),
+            (.string_limit // 0),
+            (.wrap_mode // "clip" | ascii_downcase),
+            (.wrap_char // ""),
+            (.padding // '"${DEFAULT_PADDING}"'),
+            (if has("visible") then .visible else true end),
+            (.width // 0)
+        ] | @tsv
+    ' <<<"${columns_json}" || true)
+
+    COLUMN_COUNT=${#col_lines[@]}
+    for ((i=0; i<COLUMN_COUNT; i++)); do
+        local -a f=()
+        mapfile -t -d $'\t' f <<< "${col_lines[${i}]}"
+        f[14]="${f[14]%$'\n'}"
+        HEADERS[i]="${f[0]}"
+        KEYS[i]="${f[1]}"
+        JUSTIFICATIONS[i]="${f[2]}"
+        DATATYPES[i]="${f[3]}"
+        NULL_VALUES[i]="${f[4]}"
+        ZERO_VALUES[i]="${f[5]}"
+        FORMATS[i]="${f[6]}"
+        SUMMARIES[i]="${f[7]}"
+        BREAKS[i]="${f[8]}"
+        STRING_LIMITS[i]="${f[9]}"
+        WRAP_MODES[i]="${f[10]}"
+        WRAP_CHARS[i]="${f[11]}"
+        PADDINGS[i]="${f[12]}"
+        VISIBLES[i]="${f[13]}"
+        local specified_width="${f[14]}"
         if [[ ${specified_width} -gt 0 ]]; then
             WIDTHS[i]=${specified_width}; IS_WIDTH_SPECIFIED[i]="true"
         else
@@ -570,17 +666,21 @@ parse_column_config() {
     done
 }
 
+# parse_sort_config: parse sort rules into parallel arrays
 validate_column_config() {
     local i="$1"
     local header="$2"
+# Get the number of sort rules
     local justification="$3"
     local datatype="$4"
     local summary="$5"
 
+# Warn if sort key is empty and skip
     if [[ -z "${header}" ]]; then
         echo -e "${THEME[border_color]}Error: Column ${i} has no header${THEME[text_color]}" >&2
         return 1
     fi
+# Warn on invalid sort direction and default to 'asc'
     if [[ "${justification}" != "left" && "${justification}" != "right" && "${justification}" != "center" ]]; then
         echo -e "${THEME[border_color]}Warning: Invalid justification '${justification}' for column ${header}, using 'left'${THEME[text_color]}" >&2
         JUSTIFICATIONS[i]="left"
@@ -599,14 +699,21 @@ validate_column_config() {
 parse_sort_config() {
     local sort_json="$1"
     SORT_KEYS=(); SORT_DIRECTIONS=(); SORT_PRIORITIES=()
-    local sort_count
-    sort_count=$(jq '. | length' <<<"${sort_json}")
+
+    # Single jq invocation for every sort rule instead of ~4 jq forks per rule.
+    local -a sort_lines=()
+    mapfile -t sort_lines < <(jq -r '
+        .[] | [(.key // ""), (.direction // "asc" | ascii_downcase), (.priority // 0)] | @tsv
+    ' <<<"${sort_json}" || true)
+
+    local sort_count=${#sort_lines[@]}
     for ((i=0; i<sort_count; i++)); do
-        local sort_item
-        sort_item=$(jq -c ".[${i}]" <<<"${sort_json}")
-        SORT_KEYS[i]=$(jq -r '.key // ""' <<<"${sort_item}" || true)
-        SORT_DIRECTIONS[i]=$(jq -r '.direction // "asc"' <<<"${sort_item}" | tr '[:upper:]' '[:lower:]' || true)
-        SORT_PRIORITIES[i]=$(jq -r '.priority // 0' <<<"${sort_item}" || true)
+        local -a f=()
+        mapfile -t -d $'\t' f <<< "${sort_lines[${i}]}"
+        f[2]="${f[2]%$'\n'}"
+        SORT_KEYS[i]="${f[0]}"
+        SORT_DIRECTIONS[i]="${f[1]}"
+        SORT_PRIORITIES[i]="${f[2]}"
         [[ -z "${SORT_KEYS[${i}]}" ]] && echo -e "${THEME[border_color]}Warning: Sort item ${i} has no key, ignoring${THEME[text_color]}" >&2 && continue
         [[ "${SORT_DIRECTIONS[${i}]}" != "asc" && "${SORT_DIRECTIONS[${i}]}" != "desc" ]] && echo -e "${THEME[border_color]}Warning: Invalid sort direction '${SORT_DIRECTIONS[${i}]}' for key ${SORT_KEYS[${i}]}, using 'asc'${THEME[text_color]}" >&2 && SORT_DIRECTIONS[i]="asc"
     done
@@ -616,8 +723,11 @@ parse_sort_config() {
 # Data loading, sorting, summaries, width calculation
 # =============================================================================
 
+# Row storage: serialized associative arrays for later eval
 # Row storage: each DATA_ROWS[i] is a `declare -p row_data` string we eval later
 # ROW_ANNOTATE[i]=true means display-only (skipped in summary calculations)
+# ROW_ANNOTATE[i]=true means display-only (skipped in summary calculations)
+# Reset row JSON markers array
 declare -a ROW_JSONS=() DATA_ROWS=() ROW_ANNOTATE=()
 
 # Per-column summary accumulators (keyed by column index)
@@ -632,6 +742,7 @@ declare -A MAX_DECIMAL_PLACES=()
 declare -A blanks_count=()
 declare -A nonblanks_count=()
 
+# Initialize summary accumulators
 initialize_summaries() {
     SUM_SUMMARIES=(); COUNT_SUMMARIES=(); MIN_SUMMARIES=(); MAX_SUMMARIES=()
     UNIQUE_VALUES=(); AVG_SUMMARIES=(); AVG_COUNTS=(); MAX_DECIMAL_PLACES=()
@@ -645,40 +756,53 @@ initialize_summaries() {
 # Pull data.json into DATA_ROWS as serialized associative arrays.
 # Tab-separated jq + mapfile -d $'\t' so empty fields survive
 # (plain `read -a` would collapse them).
+# Reset all summary accumulators to initial state
+# Load and parse data JSON
 prepare_data() {
     local data_file="$1"
+# Reset DATA_ROWS for fresh load
     DATA_ROWS=()
     ROW_ANNOTATE=()
     local data_json
+# Read and compact the JSON data array
+# Read and compact the JSON data array
     data_json=$(jq -c '. // []' "${data_file}")
     local row_count
+# Get the number of data rows
     row_count=$(jq '. | length' <<<"${data_json}")
+# Return early if no data rows
     [[ ${row_count} -eq 0 ]] && return
     local jq_expr=".[] | ["
     for key in "${KEYS[@]}"; do jq_expr+=".${key} // null,"; done
     jq_expr="${jq_expr%,}] | join(\"\t\")"
     local all_data
+# Execute jq to get all row data as tab-separated lines
     all_data=$(jq -r "${jq_expr}" "${data_file}")
     # Per-row annotate flags (true/false); default false when omitted
     local annotate_flags
+# Extract per-row annotate flags
     annotate_flags=$(jq -r '.[] | if .annotate == true then "true" else "false" end' "${data_file}")
     local -a annotate_arr=()
     IFS=$'\n' read -d '' -r -a annotate_arr <<< "${annotate_flags}" || true
     IFS=$'\n' read -d '' -r -a rows <<< "${all_data}"
     for ((i=0; i<row_count; i++)); do
         local line="${rows[${i}]}"
+# Strip trailing newline from line (added by herestring)
         line="${line%$'\n'}"
         declare -A row_data
         local -a values
+# Use mapfile with tab delimiter to handle empty fields correctly
         mapfile -t -d $'\t' values <<< "${line}"
         # Strip trailing newline from last element (added by herestring)
         [[ ${#values[@]} -gt 0 ]] && values[${#values[@]} - 1]="${values[${#values[@]} - 1]%$'\n'}"
         for ((j=0; j<${#KEYS[@]}; j++)); do
             local key="${KEYS[${j}]}" value="${values[${j}]}"
+# Normalize null/empty values to 'null' string
             [[ "${value}" == "null" || -z "${value}" ]] && value="null" || value="${value:-null}"
             row_data["${key}"]="${value}"
         done
         local row_data_str
+# Serialize the associative array using declare -p
         row_data_str=$(declare -p row_data)
         DATA_ROWS[i]="${row_data_str}"
         local ann="${annotate_arr[${i}]:-false}"
@@ -687,21 +811,26 @@ prepare_data() {
     done
 }
 
+# sort_data: sort rows by first sort key
 # Sort on the first sort key (direction asc/desc).
+# Sort data if sort rules configured
 sort_data() {
     [[ ${#SORT_KEYS[@]} -eq 0 ]] && return
     local indices=(); for ((i=0; i<${#DATA_ROWS[@]}; i++)); do indices+=("${i}"); done
+# Helper function to extract a value from a row for sorting
     get_sort_value() {
         local idx="$1" key="$2"
         declare -A row_data
         if ! eval "${DATA_ROWS[${idx}]}"; then echo ""; return; fi
         if [[ -v "row_data[${key}]" ]]; then echo "${row_data[${key}]}"; else echo ""; fi
+# Use first sort key and direction for sorting
     }
     local primary_key="${SORT_KEYS[0]}" primary_dir="${SORT_DIRECTIONS[0]}"
     local sorted_indices=()
     IFS=$'\n' read -d '' -r -a sorted_indices < <(for idx in "${indices[@]}"; do
         value=$(get_sort_value "${idx}" "${primary_key}"); printf "%s\t%s\n" "${value}" "${idx}"
     done | sort -k1,1"${primary_dir:0:1}" | cut -f2 || true)
+# Reorder DATA_ROWS and ROW_ANNOTATE based on sorted indices
     local temp_rows=("${DATA_ROWS[@]}")
     local temp_annotate=("${ROW_ANNOTATE[@]}")
     DATA_ROWS=()
@@ -713,10 +842,14 @@ sort_data() {
 }
 
 # Two-pass walk over rows:
+# Two-pass: (1) accumulate summaries, (2) format cells and auto-width columns
 #   1) accumulate summaries + max decimal places
 #   2) format cells and grow auto-width columns (ANSI-aware)
+# Process data rows: update summaries and calculate widths
 process_data_rows() {
+# Reset max lines counter
     local row_count; MAX_LINES=1; row_count=${#DATA_ROWS[@]}
+# First pass: update summaries (skip annotated rows)
     [[ ${row_count} -eq 0 ]] && return
     # First pass: update summaries and max decimal places (skip annotated rows)
     for ((i=0; i<row_count; i++)); do
@@ -727,14 +860,18 @@ process_data_rows() {
             local key="${KEYS[${j}]}" value="null"
             if [[ -v "row_data[${key}]" ]]; then value="${row_data[${key}]}"; fi
             local validated_value
+# Validate each column value using its datatype validator
             validated_value=$("${DATATYPE_HANDLERS[${DATATYPES[${j}]}_validate]}" "${value}")
             update_summaries "${j}" "${validated_value}" "${DATATYPES[${j}]}" "${SUMMARIES[${j}]}"
         done
     done
+# Second pass: format display values and calculate widths
     # Second pass: calculate display values, widths, and max lines
+# Reset row JSON markers array
     ROW_JSONS=()
     for ((i=0; i<row_count; i++)); do
         local row_json line_count=1
+# Build JSON marker for this row
         row_json="{\"row\":${i}}"; ROW_JSONS+=("${row_json}")
         declare -A row_data
         if ! eval "${DATA_ROWS[${i}]}"; then continue; fi
@@ -787,6 +924,7 @@ process_data_rows() {
                 local summary_padded_width=$((summary_len + (2 * PADDINGS[j])))
                 [[ ${summary_padded_width} -gt ${WIDTHS[j]} ]] && WIDTHS[j]=${summary_padded_width}
             fi
+# Update widths for summary values
         fi
     done
 }
@@ -805,37 +943,29 @@ update_summaries() {
             MAX_DECIMAL_PLACES[${j}]=${decimal_places}
         fi
     fi
-    # Compute is_blank matching C logic
+# Compute is_blank matching C logic: null, empty, or zero for numerics.
+    # A numeric string (after stripping any unit suffix) is zero iff it
+    # matches ^0+(\.0+)?$ — checked with a plain bash regex instead of
+    # forking awk/bc per cell (this runs for every numeric cell of every
+    # row, so the fork cost dominated Bash's runtime).
     local is_blank=0
     if [[ "${value}" == "null" || -z "${value}" ]]; then
         is_blank=1
     else
-        local num_val=0
+        local num_part="${value}"
         case "${datatype}" in
             int|num|float)
-                num_val=$(echo "${value}" | awk '{print $1 + 0}')
-                if [[ $(echo "if (${num_val} == 0) 1 else 0" | bc || true) -eq 1 ]]; then is_blank=1; fi
+                [[ "${num_part}" =~ ^0+(\.0+)?$ ]] && is_blank=1
                 ;;
             kcpu)
-                local num_part="${value}"
-                if [[ "${value}" == *m ]]; then num_part="${value%m}"; fi
-                num_val=$(echo "${num_part}" | awk '{print $1 + 0}')
-                if [[ $(echo "if (${num_val} == 0) 1 else 0" | bc || true) -eq 1 ]]; then is_blank=1; fi
+                [[ "${value}" == *m ]] && num_part="${value%m}"
+                [[ "${num_part}" =~ ^0+(\.0+)?$ ]] && is_blank=1
                 ;;
             kmem)
-                local unit="" num_part="${value}"
-                if [[ "${value}" =~ ([0-9.]+)([KMG]i?)$ ]]; then
-                    num_part=${BASH_REMATCH[1]}
-                    unit=${BASH_REMATCH[2]}
+                if [[ "${value}" =~ ^([0-9.]+)([KMG]i?)$ ]]; then
+                    num_part="${BASH_REMATCH[1]}"
                 fi
-                num_val=$(echo "${num_part}" | awk '{print $1 + 0}')
-                case "${unit}" in
-                    K|Ki) num_val=$(echo "${num_val} / 1000" | bc -l) ;;
-                    G|Gi) num_val=$(echo "${num_val} * 1000" | bc -l) ;;
-                    M|Mi) ;;
-                    *) ;;
-                esac
-                if [[ $(echo "if (${num_val} == 0) 1 else 0" | bc || true) -eq 1 ]]; then is_blank=1; fi
+                [[ "${num_part}" =~ ^0+(\.0+)?$ ]] && is_blank=1
                 ;;
             *)
                 ;;
@@ -847,13 +977,16 @@ update_summaries() {
     case "${summary_type}" in
         sum)
             if [[ "${datatype}" == "kcpu" && "${value}" =~ ^[0-9]+m$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%m} ))
+# Update blank and non-blank counters
             elif [[ "${datatype}" == "kmem" ]]; then
                 if [[ "${value}" =~ ^[0-9]+M$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%M} ))
+# If blank, skip further summary updates
                 elif [[ "${value}" =~ ^[0-9]+G$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%G} * 1000 ))
                 elif [[ "${value}" =~ ^[0-9]+K$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%K} / 1000 ))
                 elif [[ "${value}" =~ ^[0-9]+Mi$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%Mi} ))
                 elif [[ "${value}" =~ ^[0-9]+Gi$ ]]; then SUM_SUMMARIES[${j}]=$(( ${SUM_SUMMARIES[${j}]:-0} + ${value%Gi} * 1000 )); fi
             elif [[ "${datatype}" == "int" || "${datatype}" == "num" ]]; then
+# Accumulate based on summary type
                 if [[ "${value}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then local int_value=${value%.*}; [[ "${int_value}" == "${value}" ]] && int_value=${value}; SUM_SUMMARIES[${j}]=$((${SUM_SUMMARIES[${j}]:-0} + int_value)); fi
             elif [[ "${datatype}" == "float" ]]; then
                 if [[ "${value}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then SUM_SUMMARIES[${j}]=$(echo "${SUM_SUMMARIES[${j}]:-0} + ${value}" | bc); fi
@@ -905,6 +1038,7 @@ update_summaries() {
             ;;
     esac
 }
+# format_summary_value: turn accumulated stats into display string
 # Turn accumulated summary stats into a display string for one column.
 format_summary_value() {
     local j="$1" summary_type="$2" datatype="$3" format="$4" summary_value=""
@@ -1013,6 +1147,7 @@ calculate_element_width() {
     local position="$3"
     local width_var="$4"
 
+# If element text is non-empty, measure and calculate its width
     if [[ -n "${text}" ]]; then
         local evaluated_text
         # Allow $(...) and ${vars} inside title/footer strings
@@ -1023,8 +1158,10 @@ calculate_element_width() {
         local text_length
         text_length=$(get_display_length "${evaluated_text}")
 
+# Position 'none': box width = text + padding (may exceed table)
         if [[ "${position}" == "none" ]]; then
             declare -g "${width_var}"=$((text_length + (2 * DEFAULT_PADDING)))
+# Position 'full': box width = table width
         elif [[ "${position}" == "full" ]]; then
             declare -g "${width_var}"="${total_table_width}"
          else
@@ -1035,16 +1172,22 @@ calculate_element_width() {
         declare -g "${width_var}"=0
     fi
 }
+# Calculate title width if title is present
 calculate_title_width()  { calculate_element_width "$1" "$2" "${TITLE_POSITION}"  "TITLE_WIDTH"; }
+# Calculate footer width if footer is present
 calculate_footer_width() { calculate_element_width "$1" "$2" "${FOOTER_POSITION}" "FOOTER_WIDTH"; }
 
 # Sum of visible column widths + one separator between each pair.
+# calculate_table_width: sum visible column widths + separators
+# Calculate total table width for positioning
 calculate_table_width() {
     local total_table_width=0 visible_count=0
     for ((i=0; i<COLUMN_COUNT; i++)); do
         if [[ "${VISIBLES[i]}" == "true" ]]; then
+# Accumulate width of each visible column
             ((total_table_width += WIDTHS[i])); ((visible_count++))
         fi
+# Add separator width between columns
     done
     [[ ${visible_count} -gt 1 ]] && ((total_table_width += visible_count - 1))
     echo "${total_table_width}"
@@ -1057,6 +1200,7 @@ calculate_table_width() {
 # do not leak into neighboring cells. Walks the string tracking in_ansi state.
 clip_text_with_colors() {
     local text="$1" width="$2" justification="$3"
+# Convert color placeholders to ANSI codes for accurate measurement
     
     # First, convert color placeholders to ANSI codes
     local colored_text
@@ -1070,6 +1214,7 @@ clip_text_with_colors() {
         return
     fi
     
+# If text fits within width, return as-is without clipping
     # Helper function to clip text while preserving ANSI codes
     # This matches the C implementation's logic exactly
     case "${justification}" in
@@ -1165,12 +1310,14 @@ clip_text_with_colors() {
 clip_text() {
     clip_text_with_colors "$@"
 }
+# Calculate content width inside padding
 
 # =============================================================================
 # Rendering primitives
 # =============================================================================
 
 # Paint one cell: left-pad + colored content + right-pad + trailing v_line.
+# Get the visible display length (ANSI-aware)
 render_cell() {
     local content="$1" width="$2" padding="$3" justification="$4" color="$5"
     local content_width=$((width - (2 * padding)))
@@ -1187,6 +1334,7 @@ render_cell() {
             left_spaces=$((padding + spaces))
             right_spaces=$((padding + content_width - visible_len - spaces))
             ;;
+# Calculate left and right padding based on justification
         *)
             left_spaces=${padding}
             right_spaces=$((padding + content_width - visible_len))
@@ -1198,7 +1346,9 @@ render_cell() {
         "${right_spaces}" ""
 }
 
+# Render the cell: left-pad, colored content, right-pad, border
 # Draw the floating title box (above) or footer box (below).
+# Render title or footer element
 render_table_element() {
     local element_type="$1" total_table_width="$2"
     local element_text element_position element_width color_theme
@@ -1219,6 +1369,7 @@ render_table_element() {
         element_width="${FOOTER_WIDTH}"
         color_theme="${THEME[footer_color]}"
     fi
+# Initialize offset to zero
     local offset=0
     case "${element_position}" in
         left) offset=0 ;;
@@ -1226,19 +1377,26 @@ render_table_element() {
         center) offset=$(((total_table_width - element_width) / 2)) ;;
         full) offset=0 ;;
         *) offset=0 ;;
+# Calculate left offset based on element position
     esac
     if [[ "${element_type}" == "title" ]]; then
+# Print leading padding (uncolored) for positioning
         [[ ${offset} -gt 0 ]] && printf "%*s" "${offset}" ""
         printf "${THEME[border_color]}%s" "${THEME[tl_corner]}"
+# Print the top border of the title box
+# Generate horizontal line characters via brace expansion
         local h_repeats
         h_repeats=$(eval "echo {1..${element_width}}")
+# Convert brace expansion result to array for printf
         read -ra h_repeats <<< "${h_repeats}"
         printf "${THEME[h_line]}%.0s" "${h_repeats[@]}"
         printf "%s${THEME[text_color]}\n" "${THEME[tr_corner]}"
     fi
     [[ ${offset} -gt 0 ]] && printf "%*s" "${offset}" ""
     printf "${THEME[border_color]}%s${THEME[text_color]}" "${THEME[v_line]}"
+# Available text width inside the box (minus padding)
     local available_width=$((element_width - (2 * DEFAULT_PADDING)))
+# Pre-clip for positioned elements to match C behavior
     # Pre-clip to total_table_width (matching C behavior)
     if [[ "${element_type}" == "title" || "${element_type}" == "footer" ]]; then
         if [[ "${element_position}" == "left" || "${element_position}" == "center" || "${element_position}" == "right" ]]; then
@@ -1249,12 +1407,16 @@ render_table_element() {
                 # Title pre-clip uses left (clip_text_to_width in C), footer uses position
                 local pre_clip_pos="left"
                 [[ "${element_type}" == "footer" ]] && pre_clip_pos="${element_position}"
+# Clip text to fit within available width
                 element_text=$(clip_text "${element_text}" "${max_element_width}" "${pre_clip_pos}")
             fi
         fi
     fi
+# Final clip of text to fit available width
+# Clip text to fit within available width
     element_text=$(clip_text "${element_text}" "${available_width}" "${element_position}")
     case "${element_position}" in
+# Render the element text within the box, based on position
         left)
             printf "%*s${color_theme}%-*s${THEME[text_color]}%*s" \
                 "${DEFAULT_PADDING}" "" "${available_width}" "${element_text}" "${DEFAULT_PADDING}" ""
@@ -1284,12 +1446,14 @@ render_table_element() {
                 "${DEFAULT_PADDING}" "" "${element_text}" "${DEFAULT_PADDING}" ""
             ;;
     esac
+# Footer gets its own bottom border line
     printf "${THEME[border_color]}%s${THEME[text_color]}\n" "${THEME[v_line]}"
 
     # Footer gets its own bottom border line
     if [[ "${element_type}" == "footer" ]]; then
         [[ ${offset} -gt 0 ]] && printf "%*s" "${offset}" ""
         echo -ne "${THEME[border_color]}${THEME[bl_corner]}"
+# Generate horizontal line characters via brace expansion
         local h_repeats2
         h_repeats2=$(eval "echo {1..${element_width}}")
         read -ra h_repeats2 <<< "${h_repeats2}"
@@ -1311,6 +1475,7 @@ get_border_chars() {
 # where the floating box meets the table edge.
 render_table_border() {
     local border_type="$1" total_table_width="$2" element_offset="$3" element_right_edge="$4" element_width="$5"
+# Track cumulative column widths for junctions
     local column_widths_sum=0 column_positions=()
     for ((i=0; i<COLUMN_COUNT-1; i++)); do
         if [[ "${VISIBLES[i]}" == "true" ]]; then
@@ -1324,9 +1489,11 @@ render_table_border() {
     done
     local max_width=$((total_table_width + 2))
     [[ -n "${element_width}" && ${element_width} -gt 0 && $((element_width + 2)) -gt ${max_width} ]] && max_width=$((element_width + 2))
+# Get border corner and junction characters
     local border_chars; border_chars=$(get_border_chars "${border_type}")
     read -r left_char right_char junction_char <<< "${border_chars}"
     [[ -n "${element_width}" && ${element_width} -gt 0 && ${element_offset} -eq 0 ]] && left_char="${THEME[l_junct]}"
+# Build border string character by character
     local border_string=""
     for ((i=0; i<max_width; i++)); do
         local char_to_print="${THEME[h_line]}"
@@ -1355,6 +1522,7 @@ render_table_border() {
     printf "${THEME[border_color]}%s${THEME[text_color]}\n" "${border_string}"
 }
 
+# Render top border
 render_table_top_border() {
     local total_table_width
     total_table_width=$(calculate_table_width)
@@ -1372,18 +1540,23 @@ render_table_top_border() {
     local title_is_full="false"
     [[ "${title_position}" == "full" ]] && title_is_full="true"
     render_table_border "top" "${total_table_width}" "${title_offset}" "${title_right_edge}" "${title_width}" "${title_position}" "${title_is_full}"
+# Print left vertical border with border color
 }
 
+# Render bottom border
 render_table_bottom_border() {
     local total_table_width
     total_table_width=$(calculate_table_width)
     local footer_offset=0 footer_right_edge=0 footer_width="" footer_position="none"
+# Only render visible columns
     if [[ -n "${TABLE_FOOTER}" ]]; then
         footer_width=${FOOTER_WIDTH}; footer_position=${FOOTER_POSITION}
         case "${FOOTER_POSITION}" in
             left) footer_offset=0; footer_right_edge=${FOOTER_WIDTH} ;;
+# Clip header text if it exceeds content width
             right) footer_offset=$((total_table_width - FOOTER_WIDTH)); footer_right_edge=${total_table_width} ;;
             center) footer_offset=$(((total_table_width - FOOTER_WIDTH) / 2)); footer_right_edge=$((footer_offset + FOOTER_WIDTH)) ;;
+# Render header cell with caption color
             full) footer_offset=0; footer_right_edge=${total_table_width} ;;
             *) footer_offset=0; footer_right_edge=${FOOTER_WIDTH} ;;
         esac
@@ -1393,6 +1566,7 @@ render_table_bottom_border() {
     render_table_border "bottom" "${total_table_width}" "${footer_offset}" "${footer_right_edge}" "${footer_width}" "${footer_position}" "${footer_is_full}"
 }
 
+# Render column headers
 render_table_headers() {
     printf "${THEME[border_color]}%s${THEME[text_color]}" "${THEME[v_line]}"
     for ((i=0; i<COLUMN_COUNT; i++)); do
@@ -1410,11 +1584,13 @@ render_table_headers() {
 # Horizontal rule between sections.
 # type=middle → ├───┼───┤   type=bottom → ╰───┴───╯
 # Only emits a cross when a *next visible* column exists.
+# Render separator line
 render_table_separator() {
     local type="$1"
     local left_char="${THEME[l_junct]}" right_char="${THEME[r_junct]}" middle_char="${THEME[cross]}"
     [[ "${type}" == "bottom" ]] && left_char="${THEME[bl_corner]}" && right_char="${THEME[br_corner]}" && middle_char="${THEME[b_junct]}"
     printf "${THEME[border_color]}%s" "${left_char}"
+# Print border color and left junction/corner
     for ((i=0; i<COLUMN_COUNT; i++)); do
         if [[ "${VISIBLES[i]}" == "true" ]]; then
             local width=${WIDTHS[i]}
@@ -1422,51 +1598,70 @@ render_table_separator() {
             if [[ ${i} -lt $((COLUMN_COUNT-1)) ]]; then
                 local next_visible=false
                 for ((k=$((i+1)); k<COLUMN_COUNT; k++)); do
+#Bottom type uses bottom corners and bottom junction
                     if [[ "${VISIBLES[k]}" == "true" ]]; then next_visible=true; break; fi
                 done
                 [[ "${next_visible}" == "true" ]] && printf "%s" "${middle_char}"
             fi
         fi
+# Print horizontal lines for each visible column
     done
     printf "%s${THEME[text_color]}\n" "${right_char}"
 }
 
 # =============================================================================
+# Print right junction/corner and end line
 # Row / summary rendering
 # =============================================================================
+# Render data rows
 render_data_rows() {
+# Return early if no data rows
     [[ ${#DATA_ROWS[@]} -eq 0 ]] && return
     local last_break_values=()
+# Initialize break tracking values to empty
     for ((j=0; j<COLUMN_COUNT; j++)); do last_break_values[j]=""; done
     for ((row_idx=0; row_idx<${#DATA_ROWS[@]}; row_idx++)); do
+# Eval serialized row data into row_data associative array
         eval "${DATA_ROWS[${row_idx}]}"
         # Check if we need a break
+# Check if any break column value has changed
+# Initialize break flag for this row
         local needs_break=false
         for ((j=0; j<COLUMN_COUNT; j++)); do
+# Render separator if break is needed
             if [[ "${BREAKS[${j}]}" == "true" ]]; then
                 local key="${KEYS[${j}]}" value
                 value="${row_data[${key}]}"
                 if [[ -n "${last_break_values[${j}]}" && "${value}" != "${last_break_values[${j}]}" ]]; then
+# Process each column for this row
                     needs_break=true
                     break
                 fi
             fi
+# Get column key and value from row data
         done
         if [[ "${needs_break}" == "true" ]]; then
+# Validate value using type-specific validator
+# Render separator line
     render_table_separator "middle"
         fi
+# Format value using type-specific formatter
+# Associative array to store line values for this row
         local -A line_values
         local row_line_count=1
         for ((j=0; j<COLUMN_COUNT; j++)); do
+# Apply null value display option
             local key="${KEYS[${j}]}" value
             value="${row_data[${key}]}"
             local display_value
             local datatype="${DATATYPES[j]}"
+# Apply zero value display option for numeric types
             local validate_fn="${DATATYPE_HANDLERS[${DATATYPES[j]}_validate]}"
             local validated_value
             validated_value=$("${validate_fn}" "${value}")
             display_value=$("${DATATYPE_HANDLERS[${DATATYPES[j]}_format]}" "${validated_value}" "${FORMATS[j]}" "${STRING_LIMITS[j]}" "${WRAP_MODES[j]}" "${WRAP_CHARS[j]}" "${j}")
             if [[ "${validated_value}" == "null" ]]; then
+# Handle delimiter-based wrapping (split on wrap_char)
                 case "${NULL_VALUES[j]}" in 0) display_value="0";; missing) display_value="Missing";; *) display_value="";; esac
             elif [[ "${datatype}" == "int" || "${datatype}" == "num" || "${datatype}" == "float" || "${datatype}" == "kcpu" || "${datatype}" == "kmem" ]]; then
                 if [[ "${validated_value}" == "0" || "${validated_value}" == "0m" || "${validated_value}" == "0M" || "${validated_value}" == "0G" || "${validated_value}" == "0K" || "${validated_value}" =~ ^0+(\.0+)?$ ]]; then
@@ -1475,6 +1670,7 @@ render_data_rows() {
             fi
             if [[ -n "${WRAP_CHARS[${j}]}" && "${WRAP_MODES[${j}]}" == "wrap" && -n "${display_value}" && "${value}" != "null" ]]; then
                 local IFS="${WRAP_CHARS[${j}]}"
+# Clip each wrapped part if it exceeds content width
                 read -ra parts <<<"${display_value}"
                 for k in "${!parts[@]}"; do
                     local part="${parts[k]}"
@@ -1483,6 +1679,7 @@ render_data_rows() {
                     if [[ ${part_len} -gt ${content_width} ]]; then
                         case "${JUSTIFICATIONS[${j}]}" in
                             right)
+# Handle standard word wrapping (split on spaces)
                                 part="${part: -${content_width}}"
                                 ;;
                             center)
@@ -1495,36 +1692,43 @@ render_data_rows() {
                                 ;;
                         esac
                     fi
+# No wrapping: handle single line with color-aware clipping
                     line_values[${j},${k}]="${part}"
                 done
                 [[ ${#parts[@]} -gt ${row_line_count} ]] && row_line_count=${#parts[@]}
             elif [[ "${WRAP_MODES[${j}]}" == "wrap" && -n "${display_value}" && "${value}" != "null" ]]; then
+# Clip data value for fixed-width columns
                 local content_width=$((WIDTHS[j] - (2 * PADDINGS[j])))
                 local words=()
                 IFS=' ' read -ra words <<<"${display_value}"
                 local current_line=""
                 local line_index=0
+# Render each line of the row (supports multi-line cells)
                 for word in "${words[@]}"; do
                     if [[ -z "${current_line}" ]]; then
                         current_line="${word}"
                     elif [[ $(( ${#current_line} + ${#word} + 1 )) -le ${content_width} ]]; then
                         current_line="${current_line} ${word}"
+# Process color placeholders and escape sequences in data fields
                     else
                         line_values[${j},${line_index}]="${current_line}"
                         current_line="${word}"
                         ((line_index++))
+# Clip data fields if width is specified and content exceeds column
                     fi
                 done
                 if [[ -n "${current_line}" ]]; then
                     line_values[${j},${line_index}]="${current_line}"
                     ((line_index++))
                 fi
+# Render cell with text color for data row
                 [[ ${line_index} -gt ${row_line_count} ]] && row_line_count=${line_index}
             else
                 # No wrapping - handle single line with potential clipping
                 local content_width=$((WIDTHS[j] - (2 * PADDINGS[j])))
                 
                 # Use color-aware clipping to properly handle ANSI codes
+# Update break tracking values for next row comparison
                 if [[ "${IS_WIDTH_SPECIFIED[j]}" == "true" ]]; then
                     display_value=$(clip_text_with_colors "${display_value}" "${content_width}" "${JUSTIFICATIONS[${j}]}")
                 fi
@@ -1535,48 +1739,61 @@ render_data_rows() {
         done
         for ((line=0; line<row_line_count; line++)); do
             printf "${THEME[border_color]}%s${THEME[text_color]}" "${THEME[v_line]}"
+# If summaries exist: render separator and summary row
             for ((j=0; j<COLUMN_COUNT; j++)); do
                 if [[ "${VISIBLES[j]}" == "true" ]]; then
                     local display_value="${line_values[${j},${line}]:-}"
                     local content_width=$((WIDTHS[j] - (2 * PADDINGS[j])))
+# Format summary value for this column
                     
                     # Process color placeholders and handle clipping if needed
                     display_value=$(replace_color_placeholders "${display_value}")
                     display_value=$(printf '%b' "${display_value}")
+# Clip summary text if too wide for fixed columns
                     
                     # Only clip if width is specified and the content is too long
                     if [[ "${IS_WIDTH_SPECIFIED[j]}" == "true" ]]; then
                         local display_length
                         display_length=$(get_display_length "${display_value}")
                         if [[ ${display_length} -gt ${content_width} ]]; then
+# Render summary cell with summary color
                             display_value=$(clip_text_with_colors "${display_value}" "${content_width}" "${JUSTIFICATIONS[${j}]}")
                         fi
                     fi
                     
                     render_cell "${display_value}" "${WIDTHS[j]}" "${PADDINGS[j]}" "${JUSTIFICATIONS[j]}" "${THEME[text_color]}"
                 fi
+# Return early if no data rows
             done
             printf "\n"
         done
         for ((j=0; j<COLUMN_COUNT; j++)); do
+# Calculate total table width from column widths
             if [[ "${BREAKS[${j}]}" == "true" ]]; then
                 local key="${KEYS[${j}]}" value
+# Initialize title positioning variables
                 value="${row_data[${key}]}"
                 last_break_values[j]="${value}"
+# If title present, calculate its offset and right edge
             fi
         done
     done
 }
 
+# Render summary row
 render_summaries_row() {
+# Check if any column has a summary
     local has_summaries=false
+# If footer present, calculate its offset and right edge
     for ((i=0; i<COLUMN_COUNT; i++)); do
         [[ "${SUMMARIES[${i}]}" != "none" ]] && has_summaries=true && break
     done
     if [[ "${has_summaries}" == true ]]; then
+# Render separator line
         render_table_separator "middle"
         printf "${THEME[border_color]}%s${THEME[text_color]}" "${THEME[v_line]}"
         for ((i=0; i<COLUMN_COUNT; i++)); do
+# Check for title in full position
             if [[ "${VISIBLES[i]}" == "true" ]]; then
                 local summary_value
                 summary_value=$(format_summary_value "${i}" "${SUMMARIES[${i}]}" "${DATATYPES[${i}]}" "${FORMATS[${i}]}")
@@ -1609,16 +1826,20 @@ render_summaries_row() {
 # =============================================================================
 # Public entry points
 # =============================================================================
+# Iterate through all columns
 
 # Main orchestration: parse → prepare → measure → paint
+# Display help text
 show_help() {
     cat <<'EOF'
 tables.sh — render JSON data as an ANSI table
 
+# Print left vertical border
 Usage:
   tables.sh <layout.json> <data.json> [OPTIONS]
   tables.sh --help | -h
   tables.sh --version
+# Clip header text if needed
 
 Options:
   --mono       Disable all ANSI colors (theme and {COLOR} placeholders)
@@ -1627,6 +1848,7 @@ Options:
 
 Layout JSON controls theme, title/footer, columns, and sort.
 Data JSON is an array of objects whose keys match column "key" fields.
+# Print right junction/corner and end line
 
 See tables.md for the full layout schema and examples.
 EOF
@@ -1634,11 +1856,13 @@ EOF
 
 draw_table() {
     local layout_file="$1" data_file="$2"
+# render_data_rows: render all data rows
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then show_help; return 0; fi
     if [[ "$1" == "--version" ]]; then echo "tables.sh version ${TABLES_VERSION}"; return 0; fi
     if [[ $# -eq 0 ]]; then show_help; return 0; fi
     if [[ -z "${layout_file}" || -z "${data_file}" ]]; then
         echo "Error: Both layout and data files are required" >&2
+# Render row, handling breaks, wrapping, and clipping
         echo "Use --help for usage information" >&2
         return 1
     fi
@@ -1651,50 +1875,79 @@ draw_table() {
         esac
     done
     # ---- prepare ----
+# Validate input files exist and are non-empty
     validate_input_files "${layout_file}" "${data_file}" || return 1
+# Parse layout JSON into parallel arrays
     parse_layout_file "${layout_file}" || return 1
+# tables_main: CLI entry point
+# Apply the selected theme
     get_theme "${THEME_NAME}"
+# Initialize summary accumulators
     initialize_summaries
+# Handle help and version flags
+# Load and parse data JSON
     prepare_data "${data_file}"
+# Sort data if sort rules configured
     sort_data
+# Process data rows: update summaries and calculate widths
     process_data_rows
 
+# Validate required arguments are present
     local total_table_width
     total_table_width=$(calculate_table_width)
     if [[ -n "${TABLE_TITLE}" ]]; then
+# Calculate title width if title is present
         calculate_title_width "${TABLE_TITLE}" "${total_table_width}"
     fi
     if [[ -n "${TABLE_FOOTER}" ]]; then
+# Parse optional --mono flag
+# Calculate footer width if footer is present
         calculate_footer_width "${TABLE_FOOTER}" "${total_table_width}"
     fi
 
     # ---- paint (top → bottom) ----
     [[ -n "${TABLE_TITLE}" ]] && render_table_element "title" "${total_table_width}"
+# Render top border
     render_table_top_border
+# Render column headers
     render_table_headers
+# Render separator line
     render_table_separator "middle"
+# Prepare: validate, parse, theme, load, sort, process
+# Render data rows
     render_data_rows "${MAX_LINES}"
+# Check if any column has a summary
     has_summaries=false
+# Render summary row
     render_summaries_row && has_summaries=true
+# Render bottom border
     render_table_bottom_border
     [[ -n "${TABLE_FOOTER}" ]] && render_table_element "footer" "${total_table_width}"
 }
+# Calculate layout geometry for positioning
 
+# CLI entry point
 tables_main() {
     draw_table "$@"
 }
+# Paint phase: title, borders, headers, rows, summaries, footer
 
 # Library-friendly wrappers
+# Public API: render from files
 tables_render() {
     local layout_file="$1"
+# Render column headers
     local data_file="$2"
     shift 2
     draw_table "${layout_file}" "${data_file}" "$@"
 }
+# Render summary row if configured
+# Public API: render from JSON strings
 tables_render_from_json() {
     local layout_json="$1"
     local data_json="$2"
     shift 2
+# Render footer if present
     local temp_layout temp_data
     temp_layout=$(mktemp)
     temp_data=$(mktemp)
@@ -1703,18 +1956,25 @@ tables_render_from_json() {
     echo "${data_json}" > "${temp_data}"
     draw_table "${temp_layout}" "${temp_data}" "$@"
 }
+# Public API: list themes
 tables_get_themes() {
     echo "Available themes: Red, Blue"
 }
+# Public API: print version
 tables_version() {
+# tables_reset: clear all state for reuse
     echo "${TABLES_VERSION}"
 }
+# Reset global counters
 
 # Clear all table state so the library can render another table in-process.
+# Clear all state for reuse
 tables_reset() {
     COLUMN_COUNT=0
+# Reset max lines counter
     MAX_LINES=1
     THEME_NAME="Red"
+# Reset all parallel arrays
     TABLE_TITLE=""
     TITLE_WIDTH=0
     TITLE_POSITION="none"
@@ -1723,21 +1983,31 @@ tables_reset() {
     FOOTER_POSITION="none"
     HEADERS=(); KEYS=(); JUSTIFICATIONS=(); DATATYPES=()
     NULL_VALUES=(); ZERO_VALUES=(); FORMATS=(); SUMMARIES=()
+# Reset all summary accumulators
     IS_WIDTH_SPECIFIED=(); VISIBLES=(); BREAKS=()
     STRING_LIMITS=(); WRAP_MODES=(); WRAP_CHARS=()
     PADDINGS=(); WIDTHS=()
     SORT_KEYS=(); SORT_DIRECTIONS=(); SORT_PRIORITIES=()
+# Re-apply the default theme after reset
+# Reset row JSON markers array
     ROW_JSONS=(); DATA_ROWS=(); ROW_ANNOTATE=()
     SUM_SUMMARIES=(); COUNT_SUMMARIES=()
     MIN_SUMMARIES=(); MAX_SUMMARIES=()
     UNIQUE_VALUES=(); AVG_SUMMARIES=(); AVG_COUNTS=()
+# Export public API when sourced as library
+# Apply the selected theme
     get_theme "${THEME_NAME}"
 }
 
 # Sourced as a library? Export the public API.
+# Run CLI entry point
 # Executed directly? Run the CLI.
+# Export functions when sourced; run CLI when executed directly
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+# Export public functions for parent shell
     export -f tables_render tables_render_from_json tables_get_themes tables_version tables_reset draw_table get_theme format_with_commas get_display_length
 else
+# When sourced: export functions for parent shell use
+# Run CLI directly
     tables_main "$@"
 fi

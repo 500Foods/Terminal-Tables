@@ -20,9 +20,6 @@ make -C tables.c uncompressed # strip only
 # Shell-based test runner (compares C vs Bash output)
 bash tests/run_tests.sh           # Run all suites
 bash tests/run_tests.sh 01 05 09  # Run specific suites
-
-# Bats-based tests
-bats tests/comparison.bats
 ```
 
 ### Test Scripts
@@ -33,7 +30,6 @@ The `tests/scenarios/manifest.json` file lists all test cases.
 ```
 tests/
 ├── run_tests.sh           # Shell runner: iterates scenarios, compares output
-├── comparison.bats        # Bats test file for CI integration
 ├── README.md              # This documentation
 └── scenarios/
     ├── manifest.json      # Master manifest of all test cases

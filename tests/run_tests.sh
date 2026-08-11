@@ -16,6 +16,19 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
+SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+
+# Internal worker mode: `run_tests.sh --job-worker <idx> <jobs_tsv> <job_tmpdir>`
+# is re-invoked (via xargs, one process per parallel slot) to run a single
+# scenario out-of-process so scenarios can execute concurrently.
+JOB_WORKER_MODE=""
+if [[ "${1:-}" == "--job-worker" ]]; then
+    JOB_WORKER_MODE=1
+    JOB_IDX="$2"
+    JOBS_TSV="$3"
+    JOB_TMPDIR="$4"
+fi
+
 show_saved_results() {
     if [[ ! -f "$PERF_LAYOUT_JSON" || ! -f "$PERF_DATA_JSON" ]]; then
         echo "No saved performance results found."
@@ -33,13 +46,14 @@ show_saved_results() {
 
 # Parse flags; remaining args are suite filters
 SUITES=()
-for arg in "$@"; do
-    case "$arg" in
-        --results|-r)
-            show_saved_results
-            ;;
-        --help|-h)
-            cat <<'USAGE'
+if [[ -z "$JOB_WORKER_MODE" ]]; then
+    for arg in "$@"; do
+        case "$arg" in
+            --results|-r)
+                show_saved_results
+                ;;
+            --help|-h)
+                cat <<'USAGE'
 Usage: run_tests.sh [OPTIONS] [SUITE ...]
 
   Run comparison tests for the given suites (default: 00–09).
@@ -53,46 +67,35 @@ Examples:
   bash tests/run_tests.sh 01 04
   bash tests/run_tests.sh --results
 USAGE
-            exit 0
-            ;;
-        -*)
-            echo "Unknown option: $arg (try --help)"
-            exit 1
-            ;;
-        *)
-            SUITES+=("$arg")
-            ;;
-    esac
-done
+                exit 0
+                ;;
+            -*)
+                echo "Unknown option: $arg (try --help)"
+                exit 1
+                ;;
+            *)
+                SUITES+=("$arg")
+                ;;
+        esac
+    done
+fi
 
 pass_count=0
 fail_count=0
 total_count=0
 
-TEST_TMPDIR=$(mktemp -d)
-export CROOT="$TEST_TMPDIR/croot"
-export SHROOT="$TEST_TMPDIR/shroot"
-PERF_FILE="$TEST_TMPDIR/perf.tsv"
-export PERF_FILE
-touch "$PERF_FILE"
-SUITE_NAMES_FILE="$TEST_TMPDIR/suite_names.tsv"
-touch "$SUITE_NAMES_FILE"
+if [[ -z "$JOB_WORKER_MODE" ]]; then
+    RUN_ID="$$_${RANDOM}${RANDOM}"
+    TEST_TMPDIR=$(mktemp -d)
+    PERF_FILE="$TEST_TMPDIR/perf.tsv"
+    export PERF_FILE
+    touch "$PERF_FILE"
+    SUITE_NAMES_FILE="$TEST_TMPDIR/suite_names.tsv"
+    touch "$SUITE_NAMES_FILE"
 
-setup_c_dir() {
-    mkdir -p "$CROOT/tables.c/tables.c" "$CROOT/tables.c/tst"
-    rm -f "$CROOT/tables.c/tables" "$CROOT/tables.c/tables.c/tables"
-    ln -sf "$C_BIN" "$CROOT/tables.c/tables"
-    ln -sf "$C_BIN" "$CROOT/tables.c/tables.c/tables"
-}
-
-setup_sh_dir() {
-    mkdir -p "$SHROOT/tables.sh/tst"
-    rm -f "$SHROOT/tables.sh/tables.sh"
-    ln -sf "$SH_SCRIPT" "$SHROOT/tables.sh/tables.sh"
-}
-
-cleanup() { rm -rf "$TEST_TMPDIR"; }
-trap cleanup EXIT
+    cleanup() { rm -rf "$TEST_TMPDIR"; }
+    trap cleanup EXIT
+fi
 
 normalize_output() {
     local output="$1"
@@ -265,49 +268,81 @@ run_scenario() {
         resolve_file "$layout_file" > "$tmp_layout"
     fi
 
-    setup_c_dir
-    local c_dest="$CROOT/tables.c/tst/test.sh"
-    cat > "$c_dest" << 'CMEOF'
-#!/usr/bin/env bash
-tables_script="$(dirname "$0")/../tables.c/tables"
-"$tables_script" "$1" "$2"
-CMEOF
-    chmod +x "$c_dest"
+    # Invoke each implementation's binary/script directly (no intermediate
+    # wrapper script) to avoid an extra bash fork+exec skewing the timing.
     local c_start c_end c_raw c_out
     c_start=$(date +%s%N)
-    c_raw=$(timeout 10 bash "$c_dest" "$tmp_layout" "$tmp_data" 2>&1) || true
+    c_raw=$(timeout 10 "$C_BIN" "$tmp_layout" "$tmp_data" 2>&1) || true
     c_end=$(date +%s%N)
     local c_ms=$(( (c_end - c_start) / 1000000 ))
     c_out=$(normalize_output "$c_raw")
 
-    setup_sh_dir
-    local sh_dest="$SHROOT/tables.sh/tst/test.sh"
-    cat > "$sh_dest" << 'SHCEOF'
-#!/usr/bin/env bash
-tables_script="$(dirname "$0")/../tables.sh"
-"$tables_script" "$1" "$2"
-SHCEOF
-    chmod +x "$sh_dest"
     local sh_start sh_end sh_raw sh_out
     sh_start=$(date +%s%N)
-    sh_raw=$(timeout 120 bash "$sh_dest" "$tmp_layout" "$tmp_data" 2>&1) || true
+    sh_raw=$(timeout 120 bash "$SH_SCRIPT" "$tmp_layout" "$tmp_data" 2>&1) || true
     sh_end=$(date +%s%N)
     local sh_ms=$(( (sh_end - sh_start) / 1000000 ))
     sh_out=$(normalize_output "$sh_raw")
+
+    # --mono variant: same inputs, both implementations invoked with --mono
+    # appended. Not timed for the performance table; only validated for
+    # correctness.
+    local c_mono_raw c_mono_out
+    c_mono_raw=$(timeout 10 "$C_BIN" "$tmp_layout" "$tmp_data" --mono 2>&1) || true
+    c_mono_out=$(normalize_output "$c_mono_raw")
+
+    local sh_mono_raw sh_mono_out
+    sh_mono_raw=$(timeout 120 bash "$SH_SCRIPT" "$tmp_layout" "$tmp_data" --mono 2>&1) || true
+    sh_mono_out=$(normalize_output "$sh_mono_raw")
 
     rm -f "$tmp_data" "$tmp_layout"
 
     echo -e "${suite}\t${c_ms}\t${sh_ms}" >> "$PERF_FILE"
 
-    if [[ "$c_out" == "$sh_out" ]]; then
-        echo -e "${GREEN}PASS${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms)"
+    local color_ok=1 mono_ok=1
+    [[ "$c_out" == "$sh_out" ]] && color_ok=0
+    [[ "$c_mono_out" == "$sh_mono_out" ]] && mono_ok=0
+
+    if [[ $color_ok -eq 0 && $mono_ok -eq 0 ]]; then
+        echo -e "${GREEN}PASS${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: ${GREEN}PASS${NC}]"
         return 0
-    else
-        echo -e "${RED}DIFF${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms)"
-        diff <(echo "$c_out") <(echo "$sh_out") | head -20
-        return 1
     fi
+
+    if [[ $color_ok -ne 0 ]]; then
+        echo -e "${RED}DIFF${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: $([[ $mono_ok -eq 0 ]] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")]"
+        diff <(echo "$c_out") <(echo "$sh_out") | head -20
+    else
+        echo -e "${GREEN}PASS${NC}  (C: ${c_ms}ms, Bash: ${sh_ms}ms) [mono: ${RED}FAIL${NC}]"
+    fi
+    if [[ $mono_ok -ne 0 ]]; then
+        echo "  mono diff:"
+        diff <(echo "$c_mono_out") <(echo "$sh_mono_out") | head -20 | sed 's/^/  /'
+    fi
+    return 1
 }
+
+# Worker entry point: invoked as a fresh `bash` process (one per xargs slot)
+# so scenarios run concurrently. Each worker gets its own tmp files under a
+# job-specific subdirectory of the parent's TEST_TMPDIR, so parallel jobs
+# (and separate concurrent `run_tests.sh` invocations, which each get their
+# own TEST_TMPDIR) never share mutable state.
+if [[ -n "$JOB_WORKER_MODE" ]]; then
+    job_line=$(sed -n "$((JOB_IDX + 1))p" "$JOBS_TSV")
+    IFS=$'\t' read -r suite _label scenario_name <<< "$job_line"
+
+    job_root="$JOB_TMPDIR/job_${JOB_IDX}"
+    mkdir -p "$job_root"
+    export PERF_FILE="$JOB_TMPDIR/perf.tsv"
+
+    scenario_output=$(run_scenario "$suite" "$scenario_name")
+    rc=$?
+    printf '%s\n' "$scenario_output" > "$JOB_TMPDIR/out_${JOB_IDX}.txt"
+    echo "$rc" > "$JOB_TMPDIR/rc_${JOB_IDX}.txt"
+    rm -rf "$job_root"
+    exit 0
+fi
+
+SUITE_START_NS=$(date +%s%N)
 
 echo "=== Terminal Tables Test Suite ==="
 echo ""
@@ -342,7 +377,13 @@ for s in "${SUITES[@]}"; do
 done
 
 suite_count=$(jq -r 'length' "$MANIFEST")
-current_suite=""
+
+# --- Phase 1: build the job list (preserves manifest/suite order) ---------
+build_current_suite=""
+job_count=0
+declare -a JOB_SUITE JOB_LABEL JOB_SUITE_NAME
+JOBS_TSV="$TEST_TMPDIR/jobs.tsv"
+: > "$JOBS_TSV"
 
 for ((i=0; i<suite_count; i++)); do
     suite=$(jq -r ".[$i].suite" "$MANIFEST")
@@ -360,14 +401,10 @@ for ((i=0; i<suite_count; i++)); do
 
     scenario_name="test_$(echo "$label" | sed 's/-/_/')"
 
-    if [[ "$suite" != "$current_suite" ]]; then
-        if [[ -n "$current_suite" ]]; then
-            echo ""
-        fi
-        current_suite="$suite"
+    if [[ "$suite" != "$build_current_suite" ]]; then
+        build_current_suite="$suite"
         current_suite_name=$(jq -r ".[$i].suite_name" "$MANIFEST")
         current_suite_name="$(format_suite_name "$current_suite_name")"
-        echo "--- Suite ${suite}: ${current_suite_name} ---"
         # Record suite display name once for the performance table
         if ! grep -q "^${suite}"$'\t' "$SUITE_NAMES_FILE" 2>/dev/null; then
             echo -e "${suite}\t${current_suite_name}" >> "$SUITE_NAMES_FILE"
@@ -375,11 +412,41 @@ for ((i=0; i<suite_count; i++)); do
         SUITE_FAIL_COUNT["$suite"]=${SUITE_FAIL_COUNT["$suite"]:-0}
     fi
 
-    scenario_output=$(run_scenario "$suite" "$scenario_name")
-    rc=$?
+    printf '%s\t%s\t%s\n' "$suite" "$label" "$scenario_name" >> "$JOBS_TSV"
+    JOB_SUITE[$job_count]="$suite"
+    JOB_LABEL[$job_count]="$label"
+    JOB_SUITE_NAME[$job_count]="$current_suite_name"
+    job_count=$((job_count + 1))
+done
+
+# --- Phase 2: run all jobs in parallel via xargs ---------------------------
+if [[ $job_count -gt 0 ]]; then
+    NPROC=$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+    [[ "$NPROC" -lt 1 ]] && NPROC=1
+
+    seq 0 $((job_count - 1)) | xargs -P "$NPROC" -I{} \
+        bash "$SCRIPT_PATH" --job-worker {} "$JOBS_TSV" "$TEST_TMPDIR"
+fi
+
+# --- Phase 3: replay results in original manifest/suite order -------------
+current_suite=""
+for ((idx=0; idx<job_count; idx++)); do
+    suite="${JOB_SUITE[$idx]}"
+    label="${JOB_LABEL[$idx]}"
+
+    if [[ "$suite" != "$current_suite" ]]; then
+        if [[ -n "$current_suite" ]]; then
+            echo ""
+        fi
+        current_suite="$suite"
+        echo "--- Suite ${suite}: ${JOB_SUITE_NAME[$idx]} ---"
+    fi
+
+    scenario_output=$(cat "$TEST_TMPDIR/out_${idx}.txt" 2>/dev/null)
+    rc=$(cat "$TEST_TMPDIR/rc_${idx}.txt" 2>/dev/null || echo 2)
     echo "  $label: $scenario_output"
 
-    if [[ $rc -eq 0 ]]; then
+    if [[ "$rc" -eq 0 ]]; then
         pass_count=$((pass_count + 1))
     else
         fail_count=$((fail_count + 1))
@@ -387,6 +454,9 @@ for ((i=0; i<suite_count; i++)); do
     fi
     total_count=$((total_count + 1))
 done
+
+SUITE_END_NS=$(date +%s%N)
+SUITE_WALL_MS=$(( (SUITE_END_NS - SUITE_START_NS) / 1000000 ))
 
 echo ""
 echo "=== Summary ==="
@@ -505,11 +575,17 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
     fi
 
     data_rows+="]"
-    echo "$data_rows" | jq '.' > "$PERF_DATA_JSON"
+    # Write to a per-run temp file first, then rename into place atomically so
+    # concurrent `run_tests.sh` invocations never leave a partially-written or
+    # torn performance_data.json/performance_layout.json for each other (or
+    # for `--results`) to read.
+    perf_data_tmp="${PERF_DATA_JSON}.${RUN_ID}.tmp"
+    perf_layout_tmp="${PERF_LAYOUT_JSON}.${RUN_ID}.tmp"
+    echo "$data_rows" | jq '.' > "$perf_data_tmp"
+    mv -f "$perf_data_tmp" "$PERF_DATA_JSON"
 
-    wall_ms=$((total_sh + total_c))
-    wall_fmt=$(format_ms "$wall_ms")
-    cat > "$PERF_LAYOUT_JSON" << LAYOUT
+    wall_fmt=$(format_ms "$SUITE_WALL_MS")
+    cat > "$perf_layout_tmp" << LAYOUT
 {
   "theme": "Red",
   "title": "Performance Comparison",
@@ -526,6 +602,7 @@ if [[ -s "$PERF_FILE" && -x "$C_BIN" ]]; then
   "footer_position": "center"
 }
 LAYOUT
+    mv -f "$perf_layout_tmp" "$PERF_LAYOUT_JSON"
 
     echo ""
     "$C_BIN" "$PERF_LAYOUT_JSON" "$PERF_DATA_JSON" 2>/dev/null || true

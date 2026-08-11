@@ -13,7 +13,6 @@ The test suite compares the output of the C implementation (`tables.c/tables`) a
 ```
 tests/
 ├── run_tests.sh              # Shell-based test runner
-├── comparison.bats           # Bats test file for CI integration
 ├── README.md                 # This documentation
 └── scenarios/
     ├── manifest.json         # Master manifest of all comparison test cases
@@ -62,12 +61,6 @@ The performance table includes suite timings, a Total row, and an annotated
 `"annotate": true`). Use `--results` (or `-r`) to render that table again
 without re-running tests.
 
-### Bats Runner
-
-```bash
-bats tests/comparison.bats        # Run all comparison tests (9 suite-level tests)
-```
-
 ### CI
 
 The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds the C binary and runs the comparison tests on every push and pull request.
@@ -87,7 +80,6 @@ The GitHub Actions workflow (`.github/workflows/main.yml`) automatically builds 
 1. Add the implementation binary/script path to `run_tests.sh`
 2. Add a symlink setup block in the `run_scenario()` function
 3. Add a new `run` block alongside the C and Bash calls
-4. Add the test case to `comparison.bats`
 
 ## Normalization
 
@@ -110,4 +102,4 @@ Both implementations support `--mono` (disable all ANSI colors). Comparison runs
 
 - **C**: Compiled binary at `tables.c/tables` (requires `libjansson-dev`)
 - **Bash**: `tables.sh/tables.sh` (requires `jq`)
-- **Test runner**: `bats` (for bats-based tests), `jq` (for parsing manifest and dynamic layouts)
+- **Test runner**: `jq` (for parsing the manifest and dynamic layouts)
