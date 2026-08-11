@@ -1,6 +1,8 @@
 # Terminal Tables
 
-This is a tool (with both C and Bash versions) for drawing nice ANSI tables in the terminal. By passing in JSON for the layout, and separately JSON for the data, a table is generated that can include titles, footers, column headers, break lines, summary calculations and more.
+This is a tool (with implementations in several langauges) for drawing nice ANSI tables in the terminal. By passing in JSON for the layout, and separately JSON for the data, a table is generated that can include titles, footers, column headers, break lines, summary calculations and more.
+
+Log output, build system status, general console dashboard displays, and much more become far more readable and pleasant to look at. No more scanning through cryptic logs - exceptions become more visible and consistent output looks a lot nicer, particuarly when that's what you're looking at all day long!
 
 <img width="500" alt="example table" src="https://github.com/user-attachments/assets/8aab5c1b-2784-4288-8112-a58c5ee501f8" />  
 
@@ -12,7 +14,7 @@ While this project is currently under active development, feel free to give it a
 ## Recommended Fonts
 Font choice has a significant impact on how well terminal tables render. Choosing the right font ensures that border characters connect properly and the table grid appears clean and pixel-perfect. Highly recommended: [Iosevka](https://github.com/be5invis/Iosevka) — a versatile, open-source typeface with exceptional terminal rendering. Its carefully designed box-drawing characters produce properly connected, crisp lines with no gaps or misalignments, making it ideal for displaying dense tabular data in the terminal.
 
-<img width="500" alt="performance screenshot" src="performance_screenshot.png" />
+<img width="800" alt="performance screenshot" src="images/performance_screenshot.png" />
 
 *Example screenshot taken from a Visual Studio Code Terminal session using a customized Iosevka font*
 
@@ -23,25 +25,27 @@ Looking for copy-pasteable layouts and rendered output? See [EXAMPLES.md](EXAMPL
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2026-08-11 01:01:26 UTC
+Last updated at 2026-08-11 01:26:33 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Markdown                        17           1831             89           9241
-JSON                           110              0              0           4739
+SVG                             91              0              0          16248
+Markdown                        17           1838              2           7815
+JSON                           110              0              0           4740
 C                               14            356           1391           3290
-Bourne Shell                     3            213            480           2125
-SVG                              9              0              0            759
+Bourne Shell                     3            214            499           2148
 C/C++ Header                    13             81            351            240
 YAML                             2              4              0             66
 make                             1              6              8             32
 -------------------------------------------------------------------------------
-SUM:                           169           2491           2319          20492
+SUM:                           251           2499           2251          34579
 -------------------------------------------------------------------------------
-86 Files were skipped (duplicate, binary, or without source code):
+92 Files were skipped (duplicate, binary, or without source code):
   json: 83
+  svg: 5
   gitattributes: 1
   gitignore: 1
+  png: 1
   tables: 1
 ```
 <!--CLOC-END-->
