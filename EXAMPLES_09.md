@@ -1574,7 +1574,7 @@ boxes are free to overhang the table.
   as **two** display columns. The boxes are sized from the display width, not the byte
   length or the codepoint count.
 * Neither caption has a position, so both overhang the 56-character table — the title box
-  by three characters and the footer box by four. The borders close with `╯` and `╮`
+  by three characters and the footer box by seven. The borders close with `╯` and `╮`
   accordingly.
 * This example is the reason the library carries a full UTF-8 width classifier rather than
   a `strlen`. In a byte-counting implementation every box here would be roughly twice as
