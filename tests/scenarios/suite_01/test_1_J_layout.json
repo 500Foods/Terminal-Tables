@@ -1,0 +1,24 @@
+{
+  "theme": "Red",
+  "columns": [
+    {
+      "header": "ID",
+      "key": "id",
+      "datatype": "int",
+      "justification": "right"
+    },
+    {
+      "header": "Count",
+      "key": "count",
+      "datatype": "num",
+      "justification": "right",
+      "summary": "sum"
+    },
+    {
+      "header": "Name",
+      "key": "name",
+      "datatype": "text",
+      "justification": "left"
+    }
+  ]
+}

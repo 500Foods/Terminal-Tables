@@ -89,8 +89,11 @@ void calculate_column_widths(TableConfig *config, TableData *data) {
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);
                         summary_text[sizeof(summary_text) - 1] = '\0';
                         free(formatted);
-                    } else if (col->data_type == DATA_INT || col->data_type == DATA_NUM) {
-                        /* Integer sum with comma formatting */
+                    } else if (col->data_type == DATA_INT) {
+                        /* Integer sum: raw value, no comma separators */
+                        snprintf(summary_text, sizeof(summary_text), "%.0f", stats->sum);
+                    } else if (col->data_type == DATA_NUM) {
+                        /* Num sum: with comma formatting */
                         snprintf(summary_text, sizeof(summary_text), "%.0f", stats->sum);
                         char *formatted = format_with_commas(summary_text);
                         strncpy(summary_text, formatted, sizeof(summary_text) - 1);

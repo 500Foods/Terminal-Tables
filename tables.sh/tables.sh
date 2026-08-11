@@ -1072,24 +1072,24 @@ format_summary_value() {
                 local formatted_min
                 formatted_min=$(printf "%.${decimals}f" "${summary_value}")
                 summary_value=$(format_with_commas "${formatted_min}")
-            elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
-                summary_value=$(format_with_commas "${summary_value}")
-            fi
-            ;;
-        max)
-            summary_value="${MAX_SUMMARIES[${j}]:-}"
-            if [[ "${datatype}" == "kcpu" && -n "${summary_value}" ]]; then
-                summary_value="$(format_with_commas "${summary_value}")m"
-            elif [[ "${datatype}" == "kmem" && -n "${summary_value}" ]]; then
-                summary_value="$(format_with_commas "${summary_value}")M"
-            elif [[ "${datatype}" == "float" && -n "${summary_value}" && -n "${MAX_DECIMAL_PLACES[${j}]}" ]]; then
-                local decimals=${MAX_DECIMAL_PLACES[${j}]:-2}
-                local formatted_max
-                formatted_max=$(printf "%.${decimals}f" "${summary_value}")
-                summary_value=$(format_with_commas "${formatted_max}")
-            elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
-                summary_value=$(format_with_commas "${summary_value}")
-            fi
+             elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
+                 summary_value="${summary_value}"
+             fi
+             ;;
+         max)
+             summary_value="${MAX_SUMMARIES[${j}]:-}"
+             if [[ "${datatype}" == "kcpu" && -n "${summary_value}" ]]; then
+                 summary_value="$(format_with_commas "${summary_value}")m"
+             elif [[ "${datatype}" == "kmem" && -n "${summary_value}" ]]; then
+                 summary_value="$(format_with_commas "${summary_value}")M"
+             elif [[ "${datatype}" == "float" && -n "${summary_value}" && -n "${MAX_DECIMAL_PLACES[${j}]}" ]]; then
+                 local decimals=${MAX_DECIMAL_PLACES[${j}]:-2}
+                 local formatted_max
+                 formatted_max=$(printf "%.${decimals}f" "${summary_value}")
+                 summary_value=$(format_with_commas "${formatted_max}")
+             elif [[ "${datatype}" == "int" && -n "${summary_value}" ]]; then
+                 summary_value="${summary_value}"
+             fi
             ;;
         count)
             summary_value="${COUNT_SUMMARIES[${j}]:-0}"
@@ -1114,10 +1114,10 @@ format_summary_value() {
                     local avg_result
                     avg_result=$(awk "BEGIN {printf \"%.${decimals}f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
                     summary_value=$(format_with_commas "${avg_result}")
-                elif [[ "${datatype}" == "int" ]]; then
-                    local avg_result
-                    avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
-                    summary_value=$(format_with_commas "${avg_result}")
+                 elif [[ "${datatype}" == "int" ]]; then
+                     local avg_result
+                     avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")
+                     summary_value="${avg_result}"
                 elif [[ "${datatype}" == "num" ]]; then
                     local avg_result
                     avg_result=$(awk "BEGIN {printf \"%.0f\", (${AVG_SUMMARIES[${j}]}) / (${AVG_COUNTS[${j}]})}")

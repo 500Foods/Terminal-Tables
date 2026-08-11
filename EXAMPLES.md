@@ -203,27 +203,27 @@ strings and the theme colours are never emitted, while every width calculation s
 identical. That is why the monochrome output is exactly the same shape as the coloured
 output, and why the test suite validates both paths for every scenario.
 
-**All output blocks in this catalogue were originally captured with `--mono`** so that
-the geometry was legible in a browser and could be copied into a diff. Pages are being
-converted, one at a time, to show the real coloured output instead — starting with
-[EXAMPLES_01.md](EXAMPLES_01.md) — using
+**All output blocks in this catalogue use coloured SVGs** captured by piping the
+*non-`--mono`* run of `./tables.c/tables` straight into
 [**Oh.sh**](https://github.com/500Foods/Oh.sh), a small companion tool that reads raw
-ANSI terminal output (colour codes and all, no `--mono`) and renders it as a crisp SVG,
-which GitHub then displays inline just like any other image. In practice that means each
-example is generated in two passes: the layout and data JSON are unchanged, but the
-**Output** section is produced by piping the *coloured* run of `./tables.c/tables`
-straight into `Oh`:
+ANSI terminal output (colour codes and all) and renders it as a crisp SVG, which
+GitHub then displays inline just like any other image. The workflow for each example
+is:
 
 ```bash
+# Generate the coloured SVG (no --mono)
 ./tables.c/tables layout.json data.json | Oh --width 33 -o images/1-A.svg
+
+# Or, equivalently, reproduce the geometry in plain text
+./tables.c/tables layout.json data.json --mono
 ```
 
 The `--width` value matches the widest visible line of that particular table (measuring
 the rendered text, not the source JSON), so each image is cropped tightly instead of
-sitting in a fixed 80-column canvas. The generated SVGs live under [`images/`](images) —
-one folder, named after the example label (`1-A.svg`, `1-B.svg`, …) — so every converted
-page draws from the same consolidated location. Pages that have not yet been converted
-still show a monochrome text block and are unaffected.
+sitting in a fixed 80-column canvas. The generated SVGs live under [`images/`](images)
+— one folder, named after the example label (`1-A.svg`, `1-B.svg`, …) — so every
+page draws from the same consolidated location. `--mono` is still the right flag when
+you want plain-ASCII geometry for diffing or a terminal without colour support.
 
 ## Running any example yourself
 
@@ -238,21 +238,17 @@ tests/scenarios/suite_03/test_3_F_data.json
 So to reproduce any table on these pages:
 
 ```bash
-# C implementation
+# C implementation — coloured output piped to Oh for an SVG
 ./tables.c/tables tests/scenarios/suite_03/test_3_F_layout.json \
-                  tests/scenarios/suite_03/test_3_F_data.json
+                  tests/scenarios/suite_03/test_3_F_data.json | Oh -o images/3-F.svg
 
 # Bash implementation — identical output
 bash tables.sh/tables.sh tests/scenarios/suite_03/test_3_F_layout.json \
-                         tests/scenarios/suite_03/test_3_F_data.json
+                         tests/scenarios/suite_03/test_3_F_data.json | Oh -o images/3-F.svg
 
-# Monochrome, as shown on pages not yet converted to Oh.sh screenshots
+# Monochrome geometry for diffing (add `--mono` to any of the above)
 ./tables.c/tables tests/scenarios/suite_03/test_3_F_layout.json \
                   tests/scenarios/suite_03/test_3_F_data.json --mono
-
-# Coloured SVG, as shown on EXAMPLES_01.md (requires Oh.sh: https://github.com/500Foods/Oh.sh)
-./tables.c/tables tests/scenarios/suite_01/test_1_A_layout.json \
-                  tests/scenarios/suite_01/test_1_A_data.json | Oh -o images/1-A.svg
 ```
 
 One scenario (`9-A`) uses a *dynamic layout*: `test_9_A_layout.sh` is a shell script that
@@ -261,7 +257,7 @@ prints JSON on stdout and receives the data file as `$1`. Generate the layout fi
 ```bash
 bash tests/scenarios/suite_09/test_9_A_layout.sh \
      tests/scenarios/suite_09/test_9_A_data.json > /tmp/9A_layout.json
-./tables.c/tables /tmp/9A_layout.json tests/scenarios/suite_09/test_9_A_data.json
+./tables.c/tables /tmp/9A_layout.json tests/scenarios/suite_09/test_9_A_data.json | Oh -o images/9-A.svg
 ```
 
 To run a whole suite through the comparison harness instead — which renders each scenario
@@ -284,17 +280,13 @@ way:
 * **Layout** — the JSON that produced the table. Where a suite varies only one field
   across many scenarios, the page shows the changed fragment rather than repeating the
   whole file, and names the file so you can open the original.
-* **Output** — the exact rendering. On converted pages (see
-  [Colour and `--mono`](#colour-and---mono)) this is a coloured SVG captured with
-  [Oh.sh](https://github.com/500Foods/Oh.sh); elsewhere it is still a monochrome text
-  block.
+* **Output** — the exact rendering as a coloured SVG captured with
+  [Oh.sh](https://github.com/500Foods/Oh.sh) (see
+  [Colour and `--mono`](#colour-and---mono)). Add `--mono` to any command to
+  reproduce plain-ASCII geometry for diffing instead.
 * **What to look for** — the specific characters, widths or numbers that make the point.
   This is the part worth reading slowly; a table that looks fine at a glance is often
   demonstrating something subtle about padding or rounding.
-
-Where you see an HTML comment of the form `<!-- screenshot:3-C -->` in the page source,
-that is a reserved slot awaiting conversion to an Oh.sh screenshot for that example, in
-the same way [EXAMPLES_01.md](EXAMPLES_01.md) has already been converted.
 
 ## The example catalogue
 
