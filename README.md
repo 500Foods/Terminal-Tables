@@ -16,23 +16,22 @@ Looking for copy-pasteable layouts and rendered output? See [EXAMPLES.md](EXAMPL
 [![Count Lines of Code](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/Terminal-Tables/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```cloc
-Last updated at 2026-08-10 21:26:24 UTC
+Last updated at 2026-08-11 00:45:01 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
+Markdown                        17           1832             98           9278
 JSON                           109              0              0           4709
 C                               14            356           1391           3290
-Markdown                         7            668              2           2244
-Bourne Shell                     3            172            193           1953
+Bourne Shell                     3            194            448           2023
 C/C++ Header                    13             81            351            240
 YAML                             2              4              0             66
 make                             1              6              8             32
 -------------------------------------------------------------------------------
-SUM:                           149           1287           1945          12534
+SUM:                           159           2473           2296          19638
 -------------------------------------------------------------------------------
-87 Files were skipped (duplicate, binary, or without source code):
+86 Files were skipped (duplicate, binary, or without source code):
   json: 83
-  bats: 1
   gitattributes: 1
   gitignore: 1
   tables: 1
